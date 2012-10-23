@@ -1,18 +1,13 @@
 {
-  "author": "Michael Hanson <mhanson@mozilla.com>",
-  "name": "MozillaDemoSocialService",
-  "description": "A really simple social network for demo purposes",
+  "name": "webrtc-social-demo",
+  "description": "A WebRTC Social API demo",
   "version": "0.0.1",
-  "main": "lib/server",
-  "private": "true",
   "engines": {
-    "node": ">=0.4.7"
+    "node": "0.8.x",
+    "npm":"1.1.x"
   },
   "dependencies": {
-    "websocket":"",
-    "express":""
-  },
-  "scripts": {
-    "test": "node test/run.js"
+    "express": "3.0.x",
+    "ejs": "0.8.x"
   }
 }

@@ -10,7 +10,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script src="./sidebar.js" type="text/javascript"></script>
 <script src="https://login.persona.org/include.js"></script>
-<body onload="onLoad()">
+<body onload="onLoad()" onunload="onUnLoad()">
 
 <div id="header">
   <div id="signin">
@@ -28,6 +28,12 @@
 
 <div id="content" style="display:none">
 
+<button id="signout" onclick="signout()">signout</button>
+
+<ul id="contacts" ondblclick="onContactDoubleClick(event)">
+</ul>
+
+<!--
 <div id="testbuttons">
   <button onclick="openChat(event)">TestChat</button>
   <button onclick="openPanel(event)">TestPanel</button>
@@ -42,8 +48,8 @@
   <button onclick="location.reload()">reload sidebar</button>
   <button onclick="workerReload()">reload the worker</button>
 </div>
+-->
 
-  <button onclick="signout()">signout</button>
 </div>
 
 

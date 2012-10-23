@@ -64,3 +64,8 @@ BODY {
 #content {
   padding-top:4px;
 }
+#contacts > li {
+  font-size:12px;
+  font-weight: bold;
+  list-style-image: url("user.png"); /*FIXME*/
+}

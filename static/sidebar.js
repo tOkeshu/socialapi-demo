@@ -1,3 +1,5 @@
+var gContacts = {};
+var gUsername = "";
 
 function onLoad() {
 /* FIXME!
@@ -41,6 +43,15 @@ navigator.id.watch({
 });
 }
 
+function onUnLoad() {
+  $.ajax({type: 'POST', url: '/logout'});
+}
+
+function onContactDoubleClick(aEvent) {
+  $.ajax({type: 'POST', url: '/offer',
+         data: {to: aEvent.target.id, from: gUsername, request: "blah"}});
+}
+
 function signin() {
   navigator.id.request();
 }
@@ -56,6 +67,9 @@ function signedIn(aEmail) {
   }
   document.cookie="userdata="+JSON.stringify(userdata);
 
+  gUsername = aEmail;
+  gContacts[aEmail] = null; // Avoid displaying the user in the contact list.
+
   userIsConnected(userdata); // FIXME: remove once we have a working SocialAPI worker.
 }
 
@@ -64,6 +78,8 @@ function signout() {
 
   // send an empty user object to signal a signout to firefox
   document.cookie="userdata=";
+  delete gContacts[gUsername];
+  gUsername = "";
 
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
@@ -82,13 +98,27 @@ function setupEventSource()
   source.addEventListener("ping", function(e) {}, false);
 
   source.addEventListener("userjoined", function(e) {
-    alert("user joined " + e.data);
-    //appendUser(e.data);
+    if (e.data in gContacts)
+      return;
+    var c = document.createElement("li");
+    c.setAttribute("id", e.data);
+    c.textContent = e.data;
+    document.getElementById("contacts").appendChild(c);
+    gContacts[e.data] = c;
   }, false);
 
   source.addEventListener("userleft", function(e) {
-    alert("user left " + e.data);
-    //removeUser(e.data);
+    if (!(e.data in gContacts)) {
+      alert("unknown user left: " + e.data);
+      return;
+    }
+    var c = gContacts[e.data];
+    c.parentNode.removeChild(c);
+    delete gContacts[e.data];
+  }, false);
+
+  source.addEventListener("offer", function(e) {
+    alert(e.data);
   }, false);
 }
 

@@ -84,7 +84,7 @@ app.listen(port, function() {
 
 // Helper functions.
 
-function processEvent(req, res, type) {
+function processRequest(req, res, type) {
   if (!req.session.user) {
     res.send(401, "Unauthorized, " + type + " access denied");
     return;

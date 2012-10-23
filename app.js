@@ -25,7 +25,7 @@ app.post("/login", function(req, res) {
       req.session.regenerate(function() {
         req.session.user = val;
         notifyAllAbout(val, "userjoined");
-        res.send(200);
+        res.send(200, val);
       });
     } else {
       res.send(401, "Invalid Persona assertion");

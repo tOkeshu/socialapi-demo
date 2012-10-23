@@ -76,6 +76,22 @@ function openDataPanel(event) {
   });
 }
 
+function setupEventSource()
+{
+  var source = new EventSource("events");
+  source.addEventListener("ping", function(e) {}, false);
+
+  source.addEventListener("userjoined", function(e) {
+    alert("user joined " + e.data);
+    //appendUser(e.data);
+  }, false);
+
+  source.addEventListener("userleft", function(e) {
+    alert("user left " + e.data);
+    //removeUser(e.data);
+  }, false);
+}
+
 function userIsConnected(userdata)
 {
   $("#userid").text(userdata.userName);
@@ -84,6 +100,7 @@ function userIsConnected(userdata)
   $("#usericonbox").show();
   $("#signin").hide();
   $("#content").show();
+  setupEventSource();
 }
 
 function userIsDisconnected()

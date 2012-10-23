@@ -90,7 +90,7 @@ function processEvent(req, res, type) {
     return;
   }
 
-  if (!req.body.to || !req.body.from || !req.body.offer) {
+  if (!req.body.to || !req.body.from || !req.body.request) {
     res.send(400, "Invalid " + type + " request");
     return;
   }

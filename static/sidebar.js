@@ -1,29 +1,65 @@
 
 function onLoad() {
+/* FIXME!
   var worker = navigator.mozSocial.getWorker();
   if (worker) {
     document.body.style.border = "3px solid green";
   } else {
     document.body.style.border = "3px solid red";
   }
+*/
   // force logout on reload for now, since we dont have real session
   // management for a real user
   document.cookie="userdata=";
+
+navigator.id.watch({
+  loggedInUser: null,
+  onlogin: function(assertion) {
+    // A user has logged in! Here you need to:
+    // 1. Send the assertion to your backend for verification and to create a session.
+    // 2. Update your UI.
+    $.ajax({ /* <-- This example uses jQuery, but you can use whatever you'd like */
+      type: 'POST',
+      url: '/login', // This is a URL on your website.
+      data: {assertion: assertion},
+      success: function(res, status, xhr) { signedIn(res.responseText); },
+      error: function(xhr, status, err) { alert("login failure" + res); }
+    });
+  },
+  onlogout: function() {
+    // A user has logged out! Here you need to:
+    // Tear down the user's session by redirecting the user or making a call to your backend.
+    // Also, make sure loggedInUser will get set to null on the next page load.
+    // (That's a literal JavaScript null. Not false, 0, or undefined. null.)
+    $.ajax({
+      type: 'POST',
+      url: '/logout', // This is a URL on your website.
+      success: function(res, status, xhr) { },
+      error: function(xhr, status, err) { alert("logout failure" + res); }
+    });
+  }
+});
 }
 
 function signin() {
+  navigator.id.request();
+}
+
+function signedIn(aEmail) {
   var end = location.href.indexOf("sidebar.htm");
   var baselocation = location.href.substr(0, end);
   var userdata = {
     portrait: baselocation + "/user.png",
-    userName: "matey",
-    dispayName: "Bucko Matey",
+    userName: aEmail,
+    dispayName: aEmail,
     profileURL: baselocation + "/user.html"
   }
   document.cookie="userdata="+JSON.stringify(userdata);
 }
 
 function signout() {
+  navigator.id.logout();
+
   // send an empty user object to signal a signout to firefox
   document.cookie="userdata=";
 }

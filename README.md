@@ -12,4 +12,4 @@ value: {"location":"http://localhost:5000/manifest.json","name":"WebRTC Social D
 
 or use the remote server:
 
-value: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"WebRTC Social Demo","iconURL":"http://webrtc-social.herokuapp.com/socialapi/icon.png","workerURL":"http://webrtc-social.herokuapp.com/socialapi/worker.js","sidebarURL":"http://webrtc-social.herokuapp.com/socialapi/sidebar.htm","origin":"http://webrtc-social.herokuapp.com","enabled":true,"last_modified":135101330568}
+value: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"WebRTC Social Demo","iconURL":"http://webrtc-social.herokuapp.com/icon.png","workerURL":"http://webrtc-social.herokuapp.com/worker.js","sidebarURL":"http://webrtc-social.herokuapp.com/sidebar.htm","origin":"http://webrtc-social.herokuapp.com","enabled":true,"last_modified":135101330568}

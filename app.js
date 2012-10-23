@@ -62,11 +62,6 @@ function notifyAllAbout(user, type) {
 }
 
 function verifyAssertion(ast, aud, cb) {
-  if (!process.env.ONLINE) {
-    cb(ast);
-    return;
-  }
-
   var data = "audience=" + encodeURIComponent(aud);
   data += "&assertion=" + encodeURIComponent(ast);
 

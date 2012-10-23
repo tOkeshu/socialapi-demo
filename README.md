@@ -1,8 +1,10 @@
-socialapi-demo
-==============
+socialapi-webrtc-demo
+=====================
 
 about:config entry:
 
-name: social.manifest.http://mixedpuppy.github.com
+name: social.manifest.<foo>
 
-value: {"location":"http://mixedpuppy.github.com/socialapi-demo/manifest.json","name":"Demo Social Provider","iconURL":"http://mixedpuppy.github.com/socialapi-demo/icon.png","workerURL":"http://mixedpuppy.github.com/socialapi-demo/worker.js","sidebarURL":"http://mixedpuppy.github.com/socialapi-demo/sidebar.htm","origin":"http://mixedpuppy.github.com","enabled":true,"last_modified":1341340548668}
+ln -s /web/server/socialapi /code/socialapi-demo
+
+value: {"location":"http://localhost/socialapi/manifest.json","name":"WebRTC Social Demo","iconURL":"http://localhost/socialapi/icon.png","workerURL":"http://localhost/socialapi/worker.js","sidebarURL":"http://localhost/socialapi/sidebar.htm","origin":"http://localhost","enabled":true,"last_modified":135101330568}

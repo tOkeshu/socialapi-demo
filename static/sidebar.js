@@ -22,7 +22,7 @@ navigator.id.watch({
       type: 'POST',
       url: '/login', // This is a URL on your website.
       data: {assertion: assertion},
-      success: function(res, status, xhr) { signedIn(res.responseText); },
+      success: function(res, status, xhr) { signedIn(xhr.responseText); },
       error: function(xhr, status, err) { alert("login failure" + res); }
     });
   },
@@ -55,6 +55,8 @@ function signedIn(aEmail) {
     profileURL: baselocation + "/user.html"
   }
   document.cookie="userdata="+JSON.stringify(userdata);
+
+  userIsConnected(userdata); // FIXME: remove once we have a working SocialAPI worker.
 }
 
 function signout() {
@@ -62,6 +64,8 @@ function signout() {
 
   // send an empty user object to signal a signout to firefox
   document.cookie="userdata=";
+
+  userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
 function openDataPanel(event) {

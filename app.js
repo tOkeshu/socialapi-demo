@@ -15,6 +15,29 @@ var audience = process.env.AUDIENCE || "http://webrtc-social.herokuapp.com";
 // We use EventSource for presence. The events are named "userjoined"
 // and "userleft".
 
+app.get("/events", function(req, res) {
+  if (!req.session.user) {
+    res.send(401, "Unauthorized, events access denied");
+    return;
+  }
+
+  // Setup event channel.
+  res.type("text/event-stream");
+  res.write("event: ping\n");
+  res.write("data: ping\n\n");
+
+  // First notify this user of all users current.
+  var keys = Object.keys(users);
+  for (var i = 0; i < keys.length; i++) {
+    var user = keys[i];
+    res.write("event: userjoined\n");
+    res.write("data: " + user + "\n\n");
+  }
+
+  // Add to current list of online users.
+  users[req.session.user] = res;
+});
+
 app.post("/login", function(req, res) {
   if (!req.body.assertion) {
     res.send(500, "Invalid login request");
@@ -42,6 +65,7 @@ app.post("/logout", function(req, res) {
   var user = req.session.user;
   req.session.destroy(function() {
     notifyAllAbout(user, "userleft");
+    delete users[user];
     res.send(200);
   });
 });

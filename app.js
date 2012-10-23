@@ -70,11 +70,43 @@ app.post("/logout", function(req, res) {
   });
 });
 
+app.post("/offer", function(req, res) {
+  processRequest(req, res, "offer");
+});
+
+app.post("/answer", function(req, res) {
+  processRequest(req, res, "answer");
+});
+
 app.listen(port, function() {
   console.log("Port is " + port + " with audience " + audience);
 });
 
 // Helper functions.
+
+function processEvent(req, res, type) {
+  if (!req.session.user) {
+    res.send(401, "Unauthorized, " + type + " access denied");
+    return;
+  }
+
+  if (!req.body.to || !req.body.from || !req.body.offer) {
+    res.send(400, "Invalid " + type + " request");
+    return;
+  }
+
+  var channel = users[req.body.to];
+  if (!channel) {
+    res.send(400, "Invalid user for " + type);
+    return;
+  }
+
+  channel.write("event: " + type + "\n");
+  channel.write("data: " + JSON.stringify(req.body));
+  channel.write("\n\n");
+
+  res.send(200);
+}
 
 function notifyAllAbout(user, type) {
   var keys = Object.keys(users);

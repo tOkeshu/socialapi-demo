@@ -1,15 +1,15 @@
 var gContacts = {};
+var gChats = {};
 var gUsername = "";
 
 function onLoad() {
-/* FIXME!
   var worker = navigator.mozSocial.getWorker();
   if (worker) {
     document.body.style.border = "3px solid green";
   } else {
     document.body.style.border = "3px solid red";
   }
-*/
+
   // force logout on reload for now, since we dont have real session
   // management for a real user
   document.cookie="userdata=";
@@ -48,9 +48,57 @@ function onUnLoad() {
 }
 
 function onContactDoubleClick(aEvent) {
-  $.ajax({type: 'POST', url: '/offer',
-         data: {to: aEvent.target.id, from: gUsername, request: "blah"}});
+  var to = aEvent.target.id;
+  openChat(to, function(aWin) {
+    var pc = new mozRTCPeerConnection();
+    pc.onaddstream = function(obj) {
+      //alert("sender onaddstream, obj = " + obj.toSource());
+      //FIXME: do something with the received streams.
+      // Currently they are always fake, so it doesn't matter.
+    };
+    gChats[to].pc = pc;
+    getLocalVideo(aWin, pc, function() {
+      pc.createOffer(function(offer) {
+        pc.setLocalDescription(offer, function() {
+          $.ajax({type: 'POST', url: '/offer',
+                  data: {to: to, from: gUsername, request: JSON.stringify(offer)}});},
+          function(err) { alert("setLocalDescription failed: " + err); });
+      }, function(err) { alert("createOffer failed: " + err); });
+    });
+  });
 }
+
+function getLocalVideo(aWin, aPC, aSuccessCallback) {
+  try {
+    aWin.navigator.mozGetUserMedia({video: true}, function(stream) {
+      var video = aWin.document.getElementById("video");
+      video.mozSrcObject = stream;
+      video.play();
+      aPC.addStream(stream);
+      aWin.navigator.mozGetUserMedia({audio: true}, function(stream) {
+        var audio = aWin.document.getElementById("audio");
+        audio.mozSrcObject = stream;
+        audio.play();
+        aPC.addStream(stream);
+        aSuccessCallback();
+      }, function(err) { alert("failed to get microphone: " + err); });
+    }, function(err) { alert("failed to get camera: " + err); });
+  } catch(e) { alert(e); }
+}
+
+function getFakeVideo(aWin, aPC, aSuccessCallback) {
+  try {
+    aWin.navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
+      aPC.addStream(stream);
+      aWin.navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
+        var audio = aWin.document.getElementById("audio");
+        aPC.addStream(stream);
+        aSuccessCallback();
+      }, function(err) { alert("failed to get fake microphone: " + err); });
+    }, function(err) { alert("failed to get fake camera: " + err); });
+  } catch(e) { alert(e); }
+}
+
 
 function signin() {
   navigator.id.request();
@@ -118,7 +166,45 @@ function setupEventSource()
   }, false);
 
   source.addEventListener("offer", function(e) {
-    alert(e.data);
+    var data = JSON.parse(e.data);
+    openChat(data.from, function(aWin) {
+      var pc = new mozRTCPeerConnection();
+      var win = gChats[data.from].win;
+      pc.onaddstream = function(obj) {
+        var doc = win.document
+        var type = obj.type;
+        if (type = "video") {
+          var video = doc.getElementById("video")
+          video.mozSrcObject = obj.stream;
+          video.play();
+        }
+        else if (type = "audio") {
+          var audio = doc.getElementById("audio")
+          audio.mozSrcObject = obj.stream;
+          audio.play();
+        }
+        else
+          alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
+      };
+      gChats[data.from].pc = pc;
+      pc.setRemoteDescription(JSON.parse(data.request), function() {
+        getFakeVideo(win, pc, function() {
+          pc.createAnswer(function(answer) {
+            pc.setLocalDescription(answer, function() {
+              $.ajax({type: 'POST', url: '/answer',
+                      data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
+            }, function(err) {alert("failed to setLocalDescription, " + err)});
+          }, function(err) {alert("failed to createAnswer, " + err)});
+        });
+      }, function(err) {alert("failed to setRemoteDescription, " + err)});
+    });
+  }, false);
+
+  source.addEventListener("answer", function(e) {
+    var data = JSON.parse(e.data);
+    gChats[data.from].pc.setRemoteDescription(JSON.parse(data.request), function() {
+      // Nothing to do. The interesting things will happen in onaddstream.
+    }, function(err) {alert("failed to setRemoteDescription with answer, " + err)});
   }, false);
 }
 
@@ -171,18 +257,19 @@ function workerReload() {
   worker.port.postMessage({topic: "worker.reload", data: true});
 }
 
-var chatWin;
-
 function openPanel(event) {
   navigator.mozSocial.openPanel("./flyout.html", event.clientY, function(win) {
 	dump("window is opened "+win+"\n");
   });
 }
 
-function openChat(event) {
-  navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(chatters++), function(win) {
+function openChat(aTarget, aCallback) {
+  navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(aTarget), function(win) {
 	dump("chat window is opened "+win+"\n");
-    chatWin = win;
+    gChats[aTarget] = {win: win, pc: null};
+    win.document.title = aTarget;
+    if (aCallback)
+      aCallback(win);
   });
 }
 

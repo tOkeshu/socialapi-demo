@@ -4,7 +4,9 @@
 <head>
     <link id="siteicon" rel="icon" href="./icon.png"/>
     <title>Me!</title>
+    <style>* { margin: 0 0; padding: 0 0}</style>
     <script>
+/*
       function onLoad() {
         var worker = navigator.mozSocial.getWorker();
         if (worker) {
@@ -53,15 +55,18 @@
       function startActivity() {
         window.setInterval(notifyActivity, 3000);
       }
+*/
     </script>
 </head>
 
-<body onload="onLoad()" style="background: white">
-<div>
-<input />
+<body><!-- onload="onLoad()" style="background: white">-->
+<div id="content">
+<!--<input />
 <button onclick="startActivity()">start activity interval</button>
 <button onclick="window.close()">close panel</button>
-
+-->
+<video id="video" width="250" height="180"></video>
+<audio id="audio"></audio>
 </div>
 </body>
 </html>

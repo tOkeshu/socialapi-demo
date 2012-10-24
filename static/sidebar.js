@@ -38,7 +38,8 @@ function onContactDoubleClick(aEvent) {
     var pc = new mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var doc = gChats[to].win.document;
-      if (type = "video") {
+      var type = obj.type;
+      if (type == "video") {
         var video = doc.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
@@ -170,7 +171,7 @@ function setupEventSource()
       pc.onaddstream = function(obj) {
         var doc = win.document
         var type = obj.type;
-        if (type = "video") {
+        if (type == "video") {
           var video = doc.getElementById("remoteVideo");
           video.mozSrcObject = obj.stream;
           video.play();

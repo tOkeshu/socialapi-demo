@@ -52,12 +52,19 @@ function onContactDoubleClick(aEvent) {
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
-      if (obj.type == "video") {
-        var video = gChats[to].win.document.getElementById("remoteVideo");
+      var doc = gChats[to].win.document;
+      if (type = "video") {
+        var video = doc.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
       }
-      //FIXME do something with audio
+      else if (type = "audio") {
+        var audio = doc.getElementById("remoteAudio");
+        audio.mozSrcObject = obj.stream;
+        audio.play();
+      }
+      else
+        alert("sender onaddstream of unknown type, obj = " + obj.toSource());
     };
     gChats[to].pc = pc;
     getAudioVideo(aWin, pc, function() {

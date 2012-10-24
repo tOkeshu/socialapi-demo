@@ -8,7 +8,7 @@ $ node app.js
 
 Then edit about:config:
 
-name: 'social.manifest.<foo>', where '<foo>' is replaced by name of the social provider.
+name: `social.manifest.<foo>`, where `<foo>` is replaced by name of the social provider.
 
 value: {"location":"http://localhost:5000/manifest.json","name":"WebRTC Social Demo","iconURL":"http://localhost:5000/icon.png","workerURL":"http://localhost:5000/worker.js","sidebarURL":"http://localhost:5000/sidebar.htm","origin":"http://localhost:5000","enabled":true,"last_modified":135101330568}
 
@@ -18,6 +18,6 @@ value: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"We
 
 Additionally, in about:config, set the following prefs:
 
-media.navigator.enabled: true
-media.navigator.permission.disabled: true
-media.peerconnection.enabled: true
+    media.navigator.enabled: true
+    media.navigator.permission.disabled: true
+    media.peerconnection.enabled: true

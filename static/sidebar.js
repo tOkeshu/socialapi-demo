@@ -43,10 +43,6 @@ navigator.id.watch({
 });
 }
 
-function onUnLoad() {
-  $.ajax({type: 'POST', url: '/logout'});
-}
-
 function onContactDoubleClick(aEvent) {
   var to = aEvent.target.id;
   openChat(to, function(aWin) {

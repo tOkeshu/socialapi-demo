@@ -21,6 +21,10 @@ app.get("/events", function(req, res) {
     return;
   }
 
+  req.on("close", function() {
+    logout(req, res, true);
+  });
+  
   // Setup event channel.
   res.type("text/event-stream");
   res.write("event: ping\n");
@@ -56,8 +60,10 @@ app.post("/login", function(req, res) {
   });
 });
 
-app.post("/logout", function(req, res) {
-  if (!req.session.user) {
+// quiet is set to true when the connection has been closed by the client, so 
+// sending a response will cause an error
+function logout(req, res, quiet) {
+  if (!req.session.user && !quiet) {
     res.send(401, "No user currently logged in");
     return;
   }
@@ -66,9 +72,13 @@ app.post("/logout", function(req, res) {
   req.session.destroy(function() {
     notifyAllAbout(user, "userleft");
     delete users[user];
-    res.send(200);
+    if (!quiet) { 
+      res.send(200);
+    }
   });
-});
+}
+
+app.post("/logout", logout);
 
 app.post("/offer", function(req, res) {
   processRequest(req, res, "offer");

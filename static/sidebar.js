@@ -137,6 +137,40 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
+function setupDataChannel(originator, pc)
+{
+  function gotChat(evt) {
+    if (evt.data instanceof Blob) {
+      // for file transfer.
+    } else {
+      // put evt.data in the chat box
+      var box = document.getElementById("chat");
+      box.innerHTML += "Them: " + evt.data + "<br/>";
+    }
+  }
+
+  pc.ondatachannel = function(channel) {
+    channel.onmessage = gotChat;
+  };
+
+  pc.onconnection = function() {
+    if (originator) {
+      // open a channel to the other side.
+      var dc = pc.createDataChannel("This is pc1",{});
+      dc.binaryType = "blob";
+      // creator has to setup onmessage because ondatachannel is not called
+      channel.onmessage = gotChat;
+    }
+
+    // sending chat.
+    // document.getElementById("chatForm")
+  };
+
+  pc.onclosedconnection = function() {
+    alert("pc closed!");
+  };
+}
+
 function setupEventSource()
 {
   var source = new EventSource("events");

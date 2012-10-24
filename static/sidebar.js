@@ -25,7 +25,7 @@ navigator.id.watch({
       url: '/login', // This is a URL on your website.
       data: {assertion: assertion},
       success: function(res, status, xhr) { signedIn(xhr.responseText); },
-      error: function(xhr, status, err) { alert("login failure" + res); }
+      error: function(xhr, status, err) { alert("login failure" + err); }
     });
   },
   onlogout: function() {
@@ -37,7 +37,7 @@ navigator.id.watch({
       type: 'POST',
       url: '/logout', // This is a URL on your website.
       success: function(res, status, xhr) { },
-      error: function(xhr, status, err) { alert("logout failure" + res); }
+      error: function(xhr, status, err) { alert("logout failure" + err); }
     });
   }
 });
@@ -53,12 +53,13 @@ function onContactDoubleClick(aEvent) {
     var pc = new mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var doc = gChats[to].win.document;
-      if (type = "video") {
+      var type = obj.type;
+      if (type == "video") {
         var video = doc.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
       }
-      else if (type = "audio") {
+      else if (type == "audio") {
         var audio = doc.getElementById("remoteAudio");
         audio.mozSrcObject = obj.stream;
         audio.play();
@@ -194,12 +195,12 @@ function setupEventSource()
       pc.onaddstream = function(obj) {
         var doc = win.document
         var type = obj.type;
-        if (type = "video") {
+        if (type == "video") {
           var video = doc.getElementById("remoteVideo");
           video.mozSrcObject = obj.stream;
           video.play();
         }
-        else if (type = "audio") {
+        else if (type == "audio") {
           var audio = doc.getElementById("remoteAudio");
           audio.mozSrcObject = obj.stream;
           audio.play();

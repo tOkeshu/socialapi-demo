@@ -10,37 +10,26 @@ function onLoad() {
     document.body.style.border = "3px solid red";
   }
 
-  // force logout on reload for now, since we dont have real session
-  // management for a real user
-  document.cookie="userdata=";
-
-navigator.id.watch({
-  loggedInUser: null,
-  onlogin: function(assertion) {
-    // A user has logged in! Here you need to:
-    // 1. Send the assertion to your backend for verification and to create a session.
-    // 2. Update your UI.
-    $.ajax({ /* <-- This example uses jQuery, but you can use whatever you'd like */
-      type: 'POST',
-      url: '/login', // This is a URL on your website.
-      data: {assertion: assertion},
-      success: function(res, status, xhr) { signedIn(xhr.responseText); },
-      error: function(xhr, status, err) { alert("login failure" + err); }
-    });
-  },
-  onlogout: function() {
-    // A user has logged out! Here you need to:
-    // Tear down the user's session by redirecting the user or making a call to your backend.
-    // Also, make sure loggedInUser will get set to null on the next page load.
-    // (That's a literal JavaScript null. Not false, 0, or undefined. null.)
-    $.ajax({
-      type: 'POST',
-      url: '/logout', // This is a URL on your website.
-      success: function(res, status, xhr) { },
-      error: function(xhr, status, err) { alert("logout failure" + err); }
-    });
-  }
-});
+  navigator.id.watch({
+    loggedInUser: null,
+    onlogin: function(assertion) {
+      $.ajax({
+        type: 'POST',
+        url: '/login',
+        data: {assertion: assertion},
+        success: function(res, status, xhr) { signedIn(xhr.responseText); },
+        error: function(xhr, status, err) { alert("login failure" + res); }
+      });
+    },
+    onlogout: function() {
+      $.ajax({
+        type: 'POST',
+        url: '/logout',
+        success: function(res, status, xhr) { },
+        error: function(xhr, status, err) { alert("logout failure" + res); }
+      });
+    }
+  });
 }
 
 function onContactDoubleClick(aEvent) {
@@ -54,14 +43,13 @@ function onContactDoubleClick(aEvent) {
         var video = doc.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
-      }
-      else if (type == "audio") {
+      } else if (type = "audio") {
         var audio = doc.getElementById("remoteAudio");
         audio.mozSrcObject = obj.stream;
         audio.play();
-      }
-      else
+      } else {
         alert("sender onaddstream of unknown type, obj = " + obj.toSource());
+      }
     };
     gChats[to].pc = pc;
     getAudioVideo(aWin, pc, function() {
@@ -98,11 +86,10 @@ function getVideo(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
     aSuccessCallback(stream);
   }, function(err) {
     if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
-      //alert("faking the video");
       aWin.navigator.mozGetUserMedia({video: true, fake: true}, aSuccessCallback, aErrorCallback);
-    }
-    else
+    } else {
       aErrorCallback(err);
+    }
   });
 }
 
@@ -110,13 +97,13 @@ function getAudio(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
   aWin.navigator.mozGetUserMedia({audio: true}, function(stream) {
     aSuccessCallback(stream);
   }, function(err) {
-    if (aCanFake && err == "HARDWARE_UNAVAILABLE")
+    if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
       aWin.navigator.mozGetUserMedia({audio: true, fake: true}, aSuccessCallback, aErrorCallback);
-    else
+    } else {
       aErrorCallback(err);
+    }
   });
 }
-
 
 function signin() {
   navigator.id.request();
@@ -150,22 +137,15 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
-function openDataPanel(event) {
-  // currently cant do this
-  var url = "data:text/html,%3Chtml%3E%3Cbody%3E%3Cp%3EInline%20data%3C%2Fp%3E%3C%2Fbody%3E%3C%2Fhtml%3E";
-  navigator.mozSocial.openPanel(url, event.clientY, function(win) {
-	dump("window is opened "+win+"\n");
-  });
-}
-
 function setupEventSource()
 {
   var source = new EventSource("events");
   source.addEventListener("ping", function(e) {}, false);
 
   source.addEventListener("userjoined", function(e) {
-    if (e.data in gContacts)
+    if (e.data in gContacts) {
       return;
+    }
     var c = document.createElement("li");
     c.setAttribute("id", e.data);
     c.textContent = e.data;
@@ -195,14 +175,13 @@ function setupEventSource()
           var video = doc.getElementById("remoteVideo");
           video.mozSrcObject = obj.stream;
           video.play();
-        }
-        else if (type == "audio") {
+        } else if (type = "audio") {
           var audio = doc.getElementById("remoteAudio");
           audio.mozSrcObject = obj.stream;
           audio.play();
-        }
-        else
+        } else {
           alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
+        }
       };
       gChats[data.from].pc = pc;
       pc.setRemoteDescription(JSON.parse(data.request), function() {
@@ -255,19 +234,20 @@ messageHandlers = {
     worker.port.postMessage({topic: "broadcast.listen", data: true});
   },
   "social.user-profile": function(data) {
-    if (data.userName)
+    if (data.userName) {
       userIsConnected(data);
-    else
+    } else {
       userIsDisconnected();
+    }
   },
 };
 
 navigator.mozSocial.getWorker().port.onmessage = function onmessage(e) {
-    //dump("SIDEBAR Got message: " + e.data.topic + " " + e.data.data +"\n");
-    var topic = e.data.topic;
-    var data = e.data.data;
-    if (messageHandlers[topic])
-        messageHandlers[topic](data);
+  var topic = e.data.topic;
+  var data = e.data.data;
+  if (messageHandlers[topic]) {
+    messageHandlers[topic](data);
+  }
 };
 
 function workerReload() {
@@ -275,35 +255,16 @@ function workerReload() {
   worker.port.postMessage({topic: "worker.reload", data: true});
 }
 
-function openPanel(event) {
-  navigator.mozSocial.openPanel("./flyout.html", event.clientY, function(win) {
-	dump("window is opened "+win+"\n");
-  });
-}
-
 function openChat(aTarget, aCallback) {
   navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(aTarget), function(win) {
-	dump("chat window is opened "+win+"\n");
+  dump("chat window is opened "+win+"\n");
     gChats[aTarget] = {win: win, pc: null};
     win.document.title = aTarget;
-    if (aCallback)
+    if (aCallback) {
       aCallback(win);
+    }
   });
 }
-
-function changeLoc() {
-  window.location = "http://www.mozilla.org";
-}
-
-window.addEventListener("scroll", function(e) {
-  dump("scrolling sidebar...\n");
-}, false);
-window.addEventListener("socialFrameShow", function(e) {
-  dump("status window has been shown, visibility is "+document.visibilityState+" or "+navigator.mozSocial.isVisible+"\n");
-}, false);
-window.addEventListener("socialFrameHide", function(e) {
-  dump("status window has been hidden, visibility is "+document.visibilityState+" or "+navigator.mozSocial.isVisible+"\n");
-}, false);
 
 var chatters = 0;
 function notify(type) {
@@ -311,7 +272,7 @@ function notify(type) {
   // XXX shouldn't need a full url here.
   var end = location.href.indexOf("sidebar.htm");
   var baselocation = location.href.substr(0, end);
-  switch(type) {
+  switch (type) {
     case "link":
       data = {
         id: "foo",

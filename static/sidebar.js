@@ -67,25 +67,21 @@ function onContactDoubleClick(aEvent) {
                   data: {to: to, from: gUsername, request: JSON.stringify(offer)}});},
           function(err) { alert("setLocalDescription failed: " + err); });
       }, function(err) { alert("createOffer failed: " + err); });
-    }, false, "localVideo", "audio");
+    });
   });
 }
 
-function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake, aVideoId, aAudioId) {
+function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake) {
   try {
     getVideo(aWin, function(stream) {
-      if (aVideoId) {
-        var video = aWin.document.getElementById(aVideoId);
-        video.mozSrcObject = stream;
-        video.play();
-      }
+      var video = aWin.document.getElementById("localVideo");
+      video.mozSrcObject = stream;
+      video.play();
       aPC.addStream(stream);
       getAudio(aWin, function(stream) {
-        if (aAudioId) {
-          var audio = aWin.document.getElementById(aAudioId);
-          audio.mozSrcObject = stream;
-          audio.play();
-        }
+        var audio = aWin.document.getElementById("localAudio");
+        audio.mozSrcObject = stream;
+        audio.play();
         aPC.addStream(stream);
         aSuccessCallback();
       }, function(err) { alert("failed to get microphone: " + err); }, true);
@@ -197,7 +193,7 @@ function setupEventSource()
           video.play();
         }
         else if (type = "audio") {
-          var audio = doc.getElementById("audio");
+          var audio = doc.getElementById("remoteAudio");
           audio.mozSrcObject = obj.stream;
           audio.play();
         }
@@ -213,7 +209,7 @@ function setupEventSource()
                       data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
             }, function(err) {alert("failed to setLocalDescription, " + err)});
           }, function(err) {alert("failed to createAnswer, " + err)});
-        }, true, "localVideo");
+        }, true);
       }, function(err) {alert("failed to setRemoteDescription, " + err)});
     });
   }, false);

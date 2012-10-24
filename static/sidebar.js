@@ -52,51 +52,69 @@ function onContactDoubleClick(aEvent) {
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
-      //alert("sender onaddstream, obj = " + obj.toSource());
-      //FIXME: do something with the received streams.
-      // Currently they are always fake, so it doesn't matter.
+      if (obj.type == "video") {
+        var video = gChats[to].win.document.getElementById("remoteVideo");
+        video.mozSrcObject = obj.stream;
+        video.play();
+      }
+      //FIXME do something with audio
     };
     gChats[to].pc = pc;
-    getLocalVideo(aWin, pc, function() {
+    getAudioVideo(aWin, pc, function() {
       pc.createOffer(function(offer) {
         pc.setLocalDescription(offer, function() {
           $.ajax({type: 'POST', url: '/offer',
                   data: {to: to, from: gUsername, request: JSON.stringify(offer)}});},
           function(err) { alert("setLocalDescription failed: " + err); });
       }, function(err) { alert("createOffer failed: " + err); });
-    });
+    }, false, "localVideo", "audio");
   });
 }
 
-function getLocalVideo(aWin, aPC, aSuccessCallback) {
+function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake, aVideoId, aAudioId) {
   try {
-    aWin.navigator.mozGetUserMedia({video: true}, function(stream) {
-      var video = aWin.document.getElementById("video");
-      video.mozSrcObject = stream;
-      video.play();
+    getVideo(aWin, function(stream) {
+      if (aVideoId) {
+        var video = aWin.document.getElementById(aVideoId);
+        video.mozSrcObject = stream;
+        video.play();
+      }
       aPC.addStream(stream);
-      aWin.navigator.mozGetUserMedia({audio: true}, function(stream) {
-        var audio = aWin.document.getElementById("audio");
-        audio.mozSrcObject = stream;
-        audio.play();
+      getAudio(aWin, function(stream) {
+        if (aAudioId) {
+          var audio = aWin.document.getElementById(aAudioId);
+          audio.mozSrcObject = stream;
+          audio.play();
+        }
         aPC.addStream(stream);
         aSuccessCallback();
-      }, function(err) { alert("failed to get microphone: " + err); });
-    }, function(err) { alert("failed to get camera: " + err); });
+      }, function(err) { alert("failed to get microphone: " + err); }, true);
+    }, function(err) { alert("failed to get camera: " + err); }, true);
   } catch(e) { alert(e); }
 }
 
-function getFakeVideo(aWin, aPC, aSuccessCallback) {
-  try {
-    aWin.navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
-      aPC.addStream(stream);
-      aWin.navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
-        var audio = aWin.document.getElementById("audio");
-        aPC.addStream(stream);
-        aSuccessCallback();
-      }, function(err) { alert("failed to get fake microphone: " + err); });
-    }, function(err) { alert("failed to get fake camera: " + err); });
-  } catch(e) { alert(e); }
+function getVideo(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
+  aWin.navigator.mozGetUserMedia({video: true}, function(stream) {
+    aSuccessCallback(stream);
+  }, function(err) {
+    if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
+      //alert("faking the video");
+      aWin.navigator.mozGetUserMedia({video: true, fake: true}, aSuccessCallback, aErrorCallback);
+    }
+    else
+      aErrorCallback(err);
+  });
+}
+
+function getAudio(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
+  aWin.navigator.mozGetUserMedia({audio: true}, function(stream) {
+    aSuccessCallback(stream);
+  }, function(err) {
+    if (aCanFake && err == "HARDWARE_UNAVAILABLE")
+      aWin.navigator.mozGetUserMedia({audio: true, fake: true}, aSuccessCallback, aErrorCallback);
+    else
+      aErrorCallback(err);
+  });
 }
 
 
@@ -174,12 +192,12 @@ function setupEventSource()
         var doc = win.document
         var type = obj.type;
         if (type = "video") {
-          var video = doc.getElementById("video")
+          var video = doc.getElementById("remoteVideo");
           video.mozSrcObject = obj.stream;
           video.play();
         }
         else if (type = "audio") {
-          var audio = doc.getElementById("audio")
+          var audio = doc.getElementById("audio");
           audio.mozSrcObject = obj.stream;
           audio.play();
         }
@@ -188,14 +206,14 @@ function setupEventSource()
       };
       gChats[data.from].pc = pc;
       pc.setRemoteDescription(JSON.parse(data.request), function() {
-        getFakeVideo(win, pc, function() {
+        getAudioVideo(win, pc, function() {
           pc.createAnswer(function(answer) {
             pc.setLocalDescription(answer, function() {
               $.ajax({type: 'POST', url: '/answer',
                       data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
             }, function(err) {alert("failed to setLocalDescription, " + err)});
           }, function(err) {alert("failed to createAnswer, " + err)});
-        });
+        }, true, "localVideo");
       }, function(err) {alert("failed to setRemoteDescription, " + err)});
     });
   }, false);

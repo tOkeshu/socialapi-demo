@@ -3,7 +3,6 @@
   margin: 0;
 }
 BODY {
-  border: 3px solid gray;
   height:100%;
   user-select:none;
   -moz-user-select:none;

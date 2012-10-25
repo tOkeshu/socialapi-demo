@@ -22,3 +22,6 @@ Additionally, in about:config, set the following prefs:
     media.navigator.enabled: true
     media.navigator.permission.disabled: true
     media.peerconnection.enabled: true
+
+Also disable the popup blocker! (This is needed for the file sharing feature
+to work correctly, until Firefox implements the FileSaver API).

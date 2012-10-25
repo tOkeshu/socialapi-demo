@@ -197,7 +197,6 @@ function setupDataChannel(originator, pc, target)
   };
 
   pc.onclosedconnection = function() {
-    alert("pc closed!");
   };
 }
 
@@ -228,12 +227,11 @@ function setupFileSharing(win, dc) {
         sendFile(f);
       }
     } else {
-      alert(e.dataTransfer.mozElementCount);
+      // if an image was dropped. wat do?
     }
   }
 
   function sendFile(f) {
-    alert("sending file " + f.name + " of type " + f.type);
     dc.send(JSON.stringify({filename: f.name}));
     dc.send(f);
   }

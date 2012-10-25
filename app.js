@@ -16,6 +16,8 @@ var audience = process.env.AUDIENCE || "http://webrtc-social.herokuapp.com";
 // and "userleft".
 
 app.get("/events", function(req, res) {
+  
+  console.log("/events connection opened");
   if (!req.session.user) {
     res.send(401, "Unauthorized, events access denied");
     return;
@@ -32,8 +34,10 @@ app.get("/events", function(req, res) {
 
   // First notify this user of all users current.
   var keys = Object.keys(users);
+  console.log("number of known users: " + keys.length);
   for (var i = 0; i < keys.length; i++) {
     var user = keys[i];
+    console.log("about to send userjoined event");
     res.write("event: userjoined\n");
     res.write("data: " + user + "\n\n");
   }
@@ -122,6 +126,7 @@ function notifyAllAbout(user, type) {
   var keys = Object.keys(users);
   for (var i = 0; i < keys.length; i++) {
     var channel = users[keys[i]];
+    console.log("about to channel write in notifyAllAbout; event type: " + type + ", user: " + user);
     channel.write("event: " + type + "\n");
     channel.write("data: " + user + "\n\n");
   }

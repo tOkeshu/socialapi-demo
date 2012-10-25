@@ -36,8 +36,9 @@ function onContactDoubleClick(aEvent) {
   var to = aEvent.target.id;
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
+    var win = gChats[to].win;
     pc.onaddstream = function(obj) {
-      var doc = gChats[to].win.document;
+      var doc = win.document;
       var type = obj.type;
       if (type == "video") {
         var video = doc.getElementById("remoteVideo");
@@ -51,6 +52,7 @@ function onContactDoubleClick(aEvent) {
         alert("sender onaddstream of unknown type, obj = " + obj.toSource());
       }
     };
+    setupDataChannel(true, pc, to);
     gChats[to].pc = pc;
     getAudioVideo(aWin, pc, function() {
       pc.createOffer(function(offer) {
@@ -137,20 +139,22 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
-function setupDataChannel(originator, pc)
+function setupDataChannel(originator, pc, target)
 {
+  var win = gChats[target].win;
   function gotChat(evt) {
     if (evt.data instanceof Blob) {
       // for file transfer.
     } else {
       // put evt.data in the chat box
-      var box = document.getElementById("chat");
+      var box = win.document.getElementById("chat");
       box.innerHTML += "Them: " + evt.data + "<br/>";
     }
   }
 
   pc.ondatachannel = function(channel) {
     channel.onmessage = gotChat;
+    gChats[target].dc = channel;
   };
 
   pc.onconnection = function() {
@@ -159,11 +163,20 @@ function setupDataChannel(originator, pc)
       var dc = pc.createDataChannel("This is pc1",{});
       dc.binaryType = "blob";
       // creator has to setup onmessage because ondatachannel is not called
-      channel.onmessage = gotChat;
+      dc.onmessage = gotChat;
+      gChats[target].dc = dc;
     }
 
     // sending chat.
-    // document.getElementById("chatForm")
+    win.document.getElementById("chatForm").onsubmit = function() {
+      var localChat = win.document.getElementById("localChat");
+      var message = localChat.value;
+      gChats[target].dc.send(message);
+      localChat.value = "";
+      var box = win.document.getElementById("chat");
+      box.innerHTML += "Me: " + message + "<br/>";
+      return false;
+    }
   };
 
   pc.onclosedconnection = function() {
@@ -217,6 +230,7 @@ function setupEventSource()
           alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
         }
       };
+      setupDataChannel(false, pc, data.from);
       gChats[data.from].pc = pc;
       pc.setRemoteDescription(JSON.parse(data.request), function() {
         getAudioVideo(win, pc, function() {
@@ -224,6 +238,7 @@ function setupEventSource()
             pc.setLocalDescription(answer, function() {
               $.ajax({type: 'POST', url: '/answer',
                       data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
+              pc.connectDataConnection(5001,5000);
             }, function(err) {alert("failed to setLocalDescription, " + err)});
           }, function(err) {alert("failed to createAnswer, " + err)});
         }, true);
@@ -233,8 +248,12 @@ function setupEventSource()
 
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
-    gChats[data.from].pc.setRemoteDescription(JSON.parse(data.request), function() {
-      // Nothing to do. The interesting things will happen in onaddstream.
+    var pc = gChats[data.from].pc;
+    pc.setRemoteDescription(JSON.parse(data.request), function() {
+      // Nothing to do for the audio/video. The interesting things for
+      // them will happen in onaddstream.
+      // We need to establish the data connection though.
+      pc.connectDataConnection(5000,5001);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err)});
   }, false);
 }
@@ -291,7 +310,6 @@ function workerReload() {
 
 function openChat(aTarget, aCallback) {
   navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(aTarget), function(win) {
-  dump("chat window is opened "+win+"\n");
     gChats[aTarget] = {win: win, pc: null};
     win.document.title = aTarget;
     if (aCallback) {

@@ -173,7 +173,7 @@ function insertChatMessage(win, from, message) {
   box.scrollTop = box.scrollTopMax;
 }
 
-function gotChat(evt) {
+function gotChat(win, evt) {
   if (evt.data instanceof Blob) {
     // for file transfer.
     saveAs(evt.data, filename);
@@ -197,7 +197,9 @@ function gotChat(evt) {
 function setupFileSharing(win, dc, target) {
   /* Setup data channel */
   dc.binaryType = "blob";
-  dc.onmessage = gotChat;
+  dc.onmessage = function(evt) {
+    gotChat(win, evt);
+  };
   gChats[target].dc = dc;
 
   /* Setup drag and drop for file transfer */

@@ -146,15 +146,26 @@ function insertChatMessage(win, from, message)
   box.scrollTop = box.scrollTopMax;
 }
 
+var filename = "default.txt";
 function setupDataChannel(originator, pc, target)
 {
   var win = gChats[target].win;
   function gotChat(evt) {
     if (evt.data instanceof Blob) {
       // for file transfer.
+      saveAs(evt.data, filename);
     } else {
-      // put evt.data in the chat box
-      insertChatMessage(win, "Them", evt.data);
+      // either an incoming file or chat.
+      try {
+        var details = JSON.parse(evt.data);
+        if (details.filename) {
+          filename = details.filename;
+        } else {
+          throw new Error("JSON, but not a file");
+        }
+      } catch(e) {
+        insertChatMessage(win, "Them", evt.data);
+      }
     }
   }
 
@@ -171,6 +182,7 @@ function setupDataChannel(originator, pc, target)
       // creator has to setup onmessage because ondatachannel is not called
       dc.onmessage = gotChat;
       gChats[target].dc = dc;
+      setupFileSharing(win, dc);
     }
 
     // sending chat.
@@ -187,7 +199,9 @@ function setupDataChannel(originator, pc, target)
   pc.onclosedconnection = function() {
     alert("pc closed!");
   };
+}
 
+function setupFileSharing(win, dc) {
   /* Setup drag and drop for file transfer */
   var box = win.document.getElementById("content");
   box.addEventListener("dragover", ignoreDrag, false);
@@ -220,6 +234,8 @@ function setupDataChannel(originator, pc, target)
 
   function sendFile(f) {
     alert("sending file " + f.name + " of type " + f.type);
+    dc.send(JSON.stringify({filename: f.name}));
+    dc.send(f);
   }
 }
 

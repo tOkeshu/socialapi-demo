@@ -138,37 +138,9 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
-function insertChatMessage(win, from, message)
-{
-  var box = win.document.getElementById("chat");
-  box.innerHTML += "<strong>" + from + "</strong>: " + message + "<br/>";
-  box.scrollTop = box.scrollTopMax;
-}
-
 var filename = "default.txt";
-function setupDataChannel(originator, pc, target)
-{
+function setupDataChannel(originator, pc, target) {
   var win = gChats[target].win;
-  function gotChat(evt) {
-    if (evt.data instanceof Blob) {
-      // for file transfer.
-      saveAs(evt.data, filename);
-    } else {
-      // either an incoming file or chat.
-      try {
-        var details = JSON.parse(evt.data);
-        if (details.type == "file") {
-          filename = details.filename;
-        } else if (details.type == "url") {
-          win.open(details.url);
-        } else {
-          throw new Error("JSON, but not a file");
-        }
-      } catch(e) {
-        insertChatMessage(win, "Them", evt.data);
-      }
-    }
-  }
 
   pc.ondatachannel = function(channel) {
     setupFileSharing(win, channel);
@@ -193,6 +165,33 @@ function setupDataChannel(originator, pc, target)
 
   pc.onclosedconnection = function() {
   };
+}
+
+function insertChatMessage(win, from, message) {
+  var box = win.document.getElementById("chat");
+  box.innerHTML += "<strong>" + from + "</strong>: " + message + "<br/>";
+  box.scrollTop = box.scrollTopMax;
+}
+
+function gotChat(evt) {
+  if (evt.data instanceof Blob) {
+    // for file transfer.
+    saveAs(evt.data, filename);
+  } else {
+    // either an incoming file or chat.
+    try {
+      var details = JSON.parse(evt.data);
+      if (details.type == "file") {
+        filename = details.filename;
+      } else if (details.type == "url") {
+        win.open(details.url);
+      } else {
+        throw new Error("JSON, but not a file");
+      }
+    } catch(e) {
+      insertChatMessage(win, "Them", evt.data);
+    }
+  }
 }
 
 function setupFileSharing(win, dc) {
@@ -237,8 +236,7 @@ function setupFileSharing(win, dc) {
   }
 }
 
-function setupEventSource()
-{
+function setupEventSource() {
   var source = new EventSource("events");
   source.addEventListener("ping", function(e) {}, false);
 
@@ -315,8 +313,7 @@ function setupEventSource()
   }, false);
 }
 
-function userIsConnected(userdata)
-{
+function userIsConnected(userdata) {
   $("#userid").text(userdata.userName);
   $("#usericon").attr("src", userdata.portrait);
   $("#useridbox").show();
@@ -326,8 +323,7 @@ function userIsConnected(userdata)
   setupEventSource();
 }
 
-function userIsDisconnected()
-{
+function userIsDisconnected() {
   $("#signin").show();
   $("#content").hide();
   $("#userid").text("");

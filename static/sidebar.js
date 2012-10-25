@@ -158,8 +158,10 @@ function setupDataChannel(originator, pc, target)
       // either an incoming file or chat.
       try {
         var details = JSON.parse(evt.data);
-        if (details.filename) {
+        if (details.type == "file") {
           filename = details.filename;
+        } else if (details.type == "url") {
+          win.open(details.url);
         } else {
           throw new Error("JSON, but not a file");
         }
@@ -172,6 +174,7 @@ function setupDataChannel(originator, pc, target)
   pc.ondatachannel = function(channel) {
     channel.onmessage = gotChat;
     gChats[target].dc = channel;
+    setupFileSharing(win, channel);
   };
 
   pc.onconnection = function() {
@@ -224,16 +227,12 @@ function setupFileSharing(win, dc) {
     var files = e.target.files || e.dataTransfer.files;
     if (files.length) {
       for (var i = 0, f; f = files[i]; i++) {
-        sendFile(f);
+        dc.send(JSON.stringify({type: "file", filename: f.name}));
+        dc.send(f);
       }
     } else {
-      // if an image was dropped. wat do?
+      dc.send(JSON.stringify({type: "url", url: e.dataTransfer.getData("URL")}));
     }
-  }
-
-  function sendFile(f) {
-    dc.send(JSON.stringify({filename: f.name}));
-    dc.send(f);
   }
 }
 

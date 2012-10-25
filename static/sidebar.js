@@ -4,9 +4,7 @@ var gUsername = "";
 
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
-  if (worker) {
-    document.body.style.border = "3px solid green";
-  } else {
+  if (!worker) {
     document.body.style.border = "3px solid red";
   }
 

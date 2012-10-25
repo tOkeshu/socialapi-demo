@@ -171,20 +171,13 @@ function setupDataChannel(originator, pc, target)
   }
 
   pc.ondatachannel = function(channel) {
-    channel.onmessage = gotChat;
-    gChats[target].dc = channel;
     setupFileSharing(win, channel);
   };
 
   pc.onconnection = function() {
     if (originator) {
       // open a channel to the other side.
-      var dc = pc.createDataChannel("This is pc1",{});
-      dc.binaryType = "blob";
-      // creator has to setup onmessage because ondatachannel is not called
-      dc.onmessage = gotChat;
-      gChats[target].dc = dc;
-      setupFileSharing(win, dc);
+      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}));
     }
 
     // sending chat.
@@ -203,6 +196,11 @@ function setupDataChannel(originator, pc, target)
 }
 
 function setupFileSharing(win, dc) {
+  /* Setup data channel */
+  dc.binaryType = "blob";
+  dc.onmessage = gotChat;
+  gChats[target].dc = dc;
+
   /* Setup drag and drop for file transfer */
   var box = win.document.getElementById("content");
   box.addEventListener("dragover", ignoreDrag, false);

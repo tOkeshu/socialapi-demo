@@ -140,16 +140,33 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
+function insertChatMessage(win, from, message)
+{
+  var box = win.document.getElementById("chat");
+  box.innerHTML += "<strong>" + from + "</strong>: " + message + "<br/>";
+  box.scrollTop = box.scrollTopMax;
+}
+
+var filename = "default.txt";
 function setupDataChannel(originator, pc, target)
 {
   var win = gChats[target].win;
   function gotChat(evt) {
     if (evt.data instanceof Blob) {
       // for file transfer.
+      saveAs(evt.data, filename);
     } else {
-      // put evt.data in the chat box
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Them: " + evt.data + "<br/>";
+      // either an incoming file or chat.
+      try {
+        var details = JSON.parse(evt.data);
+        if (details.filename) {
+          filename = details.filename;
+        } else {
+          throw new Error("JSON, but not a file");
+        }
+      } catch(e) {
+        insertChatMessage(win, "Them", evt.data);
+      }
     }
   }
 
@@ -166,6 +183,7 @@ function setupDataChannel(originator, pc, target)
       // creator has to setup onmessage because ondatachannel is not called
       dc.onmessage = gotChat;
       gChats[target].dc = dc;
+      setupFileSharing(win, dc);
     }
 
     // sending chat.
@@ -174,15 +192,50 @@ function setupDataChannel(originator, pc, target)
       var message = localChat.value;
       gChats[target].dc.send(message);
       localChat.value = "";
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Me: " + message + "<br/>";
+      insertChatMessage(win, "Me", message);
       return false;
     }
   };
 
   pc.onclosedconnection = function() {
-    alert("pc closed!");
   };
+}
+
+function setupFileSharing(win, dc) {
+  /* Setup drag and drop for file transfer */
+  var box = win.document.getElementById("content");
+  box.addEventListener("dragover", ignoreDrag, false);
+  box.addEventListener("dragleave", ignoreDrag, false);
+  box.addEventListener("drop", handleDrop, false);
+
+  function ignoreDrag(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+
+    if (e.type == "dragover") {
+      win.document.getElementById("fileDrop").style.display = "block";
+    } else {
+      win.document.getElementById("fileDrop").style.display = "none";
+    }
+  }
+
+  function handleDrop(e) {
+    ignoreDrag(e);
+    var files = e.target.files || e.dataTransfer.files;
+    if (files.length) {
+      for (var i = 0, f; f = files[i]; i++) {
+        sendFile(f);
+      }
+    } else {
+      // if an image was dropped. wat do?
+    }
+  }
+
+  function sendFile(f) {
+    dc.send(JSON.stringify({filename: f.name}));
+    dc.send(f);
+  }
 }
 
 function setupEventSource()
@@ -208,7 +261,6 @@ function setupEventSource()
 
   source.addEventListener("userleft", function(e) {
     if (!(e.data in gContacts)) {
-      alert("unknown user left: " + e.data);
       return;
     }
     var c = gContacts[e.data];

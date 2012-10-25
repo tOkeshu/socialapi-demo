@@ -139,6 +139,13 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
+function insertChatMessage(win, from, message)
+{
+  var box = win.document.getElementById("chat");
+  box.innerHTML += "<strong>" + from + "</strong>: " + message + "<br/>";
+  box.scrollTop = box.scrollTopMax;
+}
+
 function setupDataChannel(originator, pc, target)
 {
   var win = gChats[target].win;
@@ -147,8 +154,7 @@ function setupDataChannel(originator, pc, target)
       // for file transfer.
     } else {
       // put evt.data in the chat box
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Them: " + evt.data + "<br/>";
+      insertChatMessage(win, "Them", evt.data);
     }
   }
 
@@ -173,8 +179,7 @@ function setupDataChannel(originator, pc, target)
       var message = localChat.value;
       gChats[target].dc.send(message);
       localChat.value = "";
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Me: " + message + "<br/>";
+      insertChatMessage(win, "Me", message);
       return false;
     }
   };

@@ -21,14 +21,19 @@ app.get("/events", function(req, res) {
     return;
   }
 
-  req.on("close", function() {
-    logout(req, res, true);
-  });
-  
   // Setup event channel.
   res.type("text/event-stream");
-  res.write("event: ping\n");
-  res.write("data: ping\n\n");
+  var pinger = setTimeout(function() {
+    if (!res) return;
+    res.write("event: ping\n");
+    res.write("data: ping\n\n");
+  }, 1000);
+
+  // Auto logout on disconnect.
+  req.on("close", function() {
+    clearInterval(pinger);
+    logout(req, res, true);
+  });
 
   // First notify this user of all users current.
   var keys = Object.keys(users);

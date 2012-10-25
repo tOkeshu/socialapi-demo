@@ -187,6 +187,24 @@ function setupDataChannel(originator, pc, target)
   pc.onclosedconnection = function() {
     alert("pc closed!");
   };
+
+  /* Setup drag and drop for file transfer */
+  var box = document.getElementById("content");
+  box.addEventListener("dragover", ignoreDrag, false);
+  box.addEventListener("dragleave", ignoreDrag, false);
+  box.addEventListener("drop", handleDrop, false);
+
+  function ignoreDrag(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    $("theChat").hide();
+    $("theDrop").show();
+  }
+
+  function handleDrop(e) {
+
+  }
 }
 
 function setupEventSource()
@@ -207,7 +225,6 @@ function setupEventSource()
 
   source.addEventListener("userleft", function(e) {
     if (!(e.data in gContacts)) {
-      alert("unknown user left: " + e.data);
       return;
     }
     var c = gContacts[e.data];

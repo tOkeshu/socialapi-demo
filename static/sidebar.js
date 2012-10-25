@@ -143,13 +143,13 @@ function setupDataChannel(originator, pc, target) {
   var win = gChats[target].win;
 
   pc.ondatachannel = function(channel) {
-    setupFileSharing(win, channel);
+    setupFileSharing(win, channel, target);
   };
 
   pc.onconnection = function() {
     if (originator) {
       // open a channel to the other side.
-      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}));
+      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}), target);
     }
 
     // sending chat.
@@ -194,7 +194,7 @@ function gotChat(evt) {
   }
 }
 
-function setupFileSharing(win, dc) {
+function setupFileSharing(win, dc, target) {
   /* Setup data channel */
   dc.binaryType = "blob";
   dc.onmessage = gotChat;

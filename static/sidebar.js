@@ -245,6 +245,9 @@ function setupEventSource()
   source.addEventListener("ping", function(e) {}, false);
 
   source.addEventListener("userjoined", function(e) {
+    if (!e.data) {
+      return;
+    }
     if (e.data in gContacts) {
       return;
     }
@@ -261,11 +264,14 @@ function setupEventSource()
   }, false);
 
   source.addEventListener("userleft", function(e) {
+    if (!e.data) {
+      return;
+    }
     if (!(e.data in gContacts)) {
       return;
     }
     var c = gContacts[e.data];
-    c.parentNode.parentNode.removeChild(c);
+    c.parentNode.removeChild(c);
     delete gContacts[e.data];
   }, false);
 

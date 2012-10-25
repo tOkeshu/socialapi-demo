@@ -232,7 +232,11 @@ function setupFileSharing(win, dc) {
         dc.send(f);
       }
     } else {
-      dc.send(JSON.stringify({type: "url", url: e.dataTransfer.getData("URL")}));
+      var url = e.dataTransfer.getData("URL");
+      if (!url.trim()) {
+        url = e.dataTransfer.mozGetDataAt("text/x-moz-text-internal", 0);
+      }
+      dc.send(JSON.stringify({type: "url", url: url}));
     }
   }
 }

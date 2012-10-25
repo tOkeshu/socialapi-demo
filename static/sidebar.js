@@ -158,7 +158,10 @@ function setupDataChannel(originator, pc, target) {
       var message = localChat.value;
       gChats[target].dc.send(message);
       localChat.value = "";
-      insertChatMessage(win, "Me", message);
+      // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
+      try {
+        insertChatMessage(win, "Me", message);
+      } catch(e) {}
       return false;
     }
   };

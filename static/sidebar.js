@@ -189,7 +189,7 @@ function setupDataChannel(originator, pc, target)
   };
 
   /* Setup drag and drop for file transfer */
-  var box = document.getElementById("content");
+  var box = win.document.getElementById("content");
   box.addEventListener("dragover", ignoreDrag, false);
   box.addEventListener("dragleave", ignoreDrag, false);
   box.addEventListener("drop", handleDrop, false);
@@ -198,12 +198,28 @@ function setupDataChannel(originator, pc, target)
     e.stopPropagation();
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
-    $("theChat").hide();
-    $("theDrop").show();
+
+    if (e.type == "dragover") {
+      win.document.getElementById("fileDrop").style.display = "block";
+    } else {
+      win.document.getElementById("fileDrop").style.display = "none";
+    }
   }
 
   function handleDrop(e) {
+    ignoreDrag(e);
+    var files = e.target.files || e.dataTransfer.files;
+    if (files.length) {
+      for (var i = 0, f; f = files[i]; i++) {
+        sendFile(f);
+      }
+    } else {
+      alert(e.dataTransfer.mozElementCount);
+    }
+  }
 
+  function sendFile(f) {
+    alert("sending file " + f.name + " of type " + f.type);
   }
 }
 

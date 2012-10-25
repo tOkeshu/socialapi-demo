@@ -197,6 +197,7 @@ function setupEventSource()
     var button = document.createElement("button");
     button.setAttribute("value", e.data);
     button.textContent = e.data;
+    button.setAttribute("class", "userButton");
     var c = document.createElement("li");
     c.setAttribute("id", e.data);
     c.appendChild(button);

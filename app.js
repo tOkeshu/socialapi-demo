@@ -38,7 +38,7 @@ app.get("/events", function(req, res) {
   });
 
   // Ping every 1 second.
-  var pinger = setTimeout(function() {
+  var pinger = setInterval(function() {
     if (!res) return;
     res.write("event: ping\n");
     res.write("data: ping\n\n");

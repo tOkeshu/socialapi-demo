@@ -3,7 +3,6 @@
   margin: 0;
 }
 BODY {
-  border: 3px solid gray;
   height:100%;
   user-select:none;
   -moz-user-select:none;
@@ -62,10 +61,15 @@ BODY {
   padding-right:4px;
 }
 #content {
+  overflow: hidden;
   padding-top:4px;
 }
-#contacts > li {
-  font-size:12px;
+
+.userButton {
+  width: 100%;
+  font-size: 12px;
   font-weight: bold;
-  list-style-image: url("user.png"); /*FIXME*/
+  border-top: 0px;
+  padding: 2px;
+  border-radius: 0;
 }

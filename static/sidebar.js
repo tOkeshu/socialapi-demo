@@ -4,9 +4,7 @@ var gUsername = "";
 
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
-  if (worker) {
-    document.body.style.border = "3px solid green";
-  } else {
+  if (!worker) {
     document.body.style.border = "3px solid red";
   }
 
@@ -32,8 +30,9 @@ function onLoad() {
   });
 }
 
-function onContactDoubleClick(aEvent) {
-  var to = aEvent.target.id;
+function onContactClick(aEvent) {
+  var to = aEvent.target.value;
+  console.log("to = " + to);
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
     var win = gChats[to].win;
@@ -139,32 +138,18 @@ function signout() {
   userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
-function setupDataChannel(originator, pc, target)
-{
+var filename = "default.txt";
+function setupDataChannel(originator, pc, target) {
   var win = gChats[target].win;
-  function gotChat(evt) {
-    if (evt.data instanceof Blob) {
-      // for file transfer.
-    } else {
-      // put evt.data in the chat box
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Them: " + evt.data + "<br/>";
-    }
-  }
 
   pc.ondatachannel = function(channel) {
-    channel.onmessage = gotChat;
-    gChats[target].dc = channel;
+    setupFileSharing(win, channel, target);
   };
 
   pc.onconnection = function() {
     if (originator) {
       // open a channel to the other side.
-      var dc = pc.createDataChannel("This is pc1",{});
-      dc.binaryType = "blob";
-      // creator has to setup onmessage because ondatachannel is not called
-      dc.onmessage = gotChat;
-      gChats[target].dc = dc;
+      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}), target);
     }
 
     // sending chat.
@@ -173,19 +158,90 @@ function setupDataChannel(originator, pc, target)
       var message = localChat.value;
       gChats[target].dc.send(message);
       localChat.value = "";
-      var box = win.document.getElementById("chat");
-      box.innerHTML += "Me: " + message + "<br/>";
+      // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
+      try {
+        insertChatMessage(win, "Me", message);
+      } catch(e) {}
       return false;
     }
   };
 
   pc.onclosedconnection = function() {
-    alert("pc closed!");
   };
 }
 
-function setupEventSource()
-{
+function insertChatMessage(win, from, message) {
+  var box = win.document.getElementById("chat");
+  box.innerHTML += "<span class=\"" + from + "\">" + from + "</span>: " + message + "<br/>";
+  box.scrollTop = box.scrollTopMax;
+}
+
+function gotChat(win, evt) {
+  if (evt.data instanceof Blob) {
+    // for file transfer.
+    saveAs(evt.data, filename);
+  } else {
+    // either an incoming file or chat.
+    try {
+      var details = JSON.parse(evt.data);
+      if (details.type == "file") {
+        filename = details.filename;
+      } else if (details.type == "url") {
+        win.open(details.url);
+      } else {
+        throw new Error("JSON, but not a file");
+      }
+    } catch(e) {
+      insertChatMessage(win, "Them", evt.data);
+    }
+  }
+}
+
+function setupFileSharing(win, dc, target) {
+  /* Setup data channel */
+  dc.binaryType = "blob";
+  dc.onmessage = function(evt) {
+    gotChat(win, evt);
+  };
+  gChats[target].dc = dc;
+
+  /* Setup drag and drop for file transfer */
+  var box = win.document.getElementById("content");
+  box.addEventListener("dragover", ignoreDrag, false);
+  box.addEventListener("dragleave", ignoreDrag, false);
+  box.addEventListener("drop", handleDrop, false);
+
+  function ignoreDrag(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+
+    if (e.type == "dragover") {
+      win.document.getElementById("fileDrop").style.display = "block";
+    } else {
+      win.document.getElementById("fileDrop").style.display = "none";
+    }
+  }
+
+  function handleDrop(e) {
+    ignoreDrag(e);
+    var files = e.target.files || e.dataTransfer.files;
+    if (files.length) {
+      for (var i = 0, f; f = files[i]; i++) {
+        dc.send(JSON.stringify({type: "file", filename: f.name}));
+        dc.send(f);
+      }
+    } else {
+      var url = e.dataTransfer.getData("URL");
+      if (!url.trim()) {
+        url = e.dataTransfer.mozGetDataAt("text/x-moz-text-internal", 0);
+      }
+      dc.send(JSON.stringify({type: "url", url: url}));
+    }
+  }
+}
+
+function setupEventSource() {
   var source = new EventSource("events");
   source.addEventListener("ping", function(e) {}, false);
 
@@ -193,16 +249,20 @@ function setupEventSource()
     if (e.data in gContacts) {
       return;
     }
+    var button = document.createElement("button");
+    button.setAttribute("value", e.data);
+    button.textContent = e.data;
+    button.setAttribute("class", "userButton");
     var c = document.createElement("li");
     c.setAttribute("id", e.data);
-    c.textContent = e.data;
+    c.appendChild(button);
     document.getElementById("contacts").appendChild(c);
+    $("li > button").button().click(onContactClick);
     gContacts[e.data] = c;
   }, false);
 
   source.addEventListener("userleft", function(e) {
-    if (!(e.data in gContacts)) {
-      alert("unknown user left: " + e.data);
+    if (!gContacts[e.data]) {
       return;
     }
     var c = gContacts[e.data];
@@ -258,8 +318,7 @@ function setupEventSource()
   }, false);
 }
 
-function userIsConnected(userdata)
-{
+function userIsConnected(userdata) {
   $("#userid").text(userdata.userName);
   $("#usericon").attr("src", userdata.portrait);
   $("#useridbox").show();
@@ -269,8 +328,7 @@ function userIsConnected(userdata)
   setupEventSource();
 }
 
-function userIsDisconnected()
-{
+function userIsDisconnected() {
   $("#signin").show();
   $("#content").hide();
   $("#userid").text("");

@@ -6,7 +6,8 @@ This needs the latest Firefox 19 (currently the Nightly channel) to work.
 To start the server:
 $ env PORT=5000 AUDIENCE="http://localhost:5000" node app.js
 
-Then edit about:config:
+Create a new profile.  You don't want to be messing with all these
+prefs in a profile that you use regularly. Then edit about:config:
 
 name: `social.manifest.<foo>`, where `<foo>` is replaced by name of the social provider.
 

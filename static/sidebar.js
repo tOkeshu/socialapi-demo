@@ -122,8 +122,6 @@ function signedIn(aEmail) {
 
   gUsername = aEmail;
   gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
-
-  userIsConnected(userdata); // FIXME: remove once we have a working SocialAPI worker.
 }
 
 function signout() {
@@ -132,8 +130,6 @@ function signout() {
   // send an empty user object to signal a signout to firefox
   delete gContacts[gUsername];
   gUsername = "";
-
-  userIsDisconnected(); // FIXME: remove once we have a working SocialAPI worker.
 }
 
 var filename = "default.txt";

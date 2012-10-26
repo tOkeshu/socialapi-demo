@@ -2,6 +2,13 @@ var express = require("express"),
     https   = require("https"),
     app     = express();
 
+var debugLogging = true;
+var debugLog(arg) {
+  if (debugLogging) {
+    console.log(arg);
+  }
+}
+
 app.use(express.bodyParser());
 app.use(express.cookieParser("thisistehsecret"));
 
@@ -12,12 +19,14 @@ var users = {};
 var port = process.env.PORT || 5000;
 var audience = process.env.AUDIENCE || "http://webrtc-social.herokuapp.com";
 
+
+  
 // We use EventSource for presence. The events are named "userjoined"
 // and "userleft".
 
 app.get("/events", function(req, res) {
   
-  console.log("/events connection opened");
+  debugLog("/events connection opened");
   if (!req.session.user) {
     res.send(401, "Unauthorized, events access denied");
     return;
@@ -39,10 +48,10 @@ app.get("/events", function(req, res) {
 
   // First notify this user of all users current.
   var keys = Object.keys(users);
-  console.log("number of known users: " + keys.length);
+  debugLog("number of known users: " + keys.length);
   for (var i = 0; i < keys.length; i++) {
     var user = keys[i];
-    console.log("about to send userjoined event");
+    debugLog("about to send userjoined event, data: " + data);
     res.write("event: userjoined\n");
     res.write("data: " + user + "\n\n");
   }
@@ -98,7 +107,7 @@ app.post("/answer", function(req, res) {
 });
 
 app.listen(port, function() {
-  console.log("Port is " + port + " with audience " + audience);
+  debugLog("Port is " + port + " with audience " + audience);
 });
 
 // Helper functions.
@@ -131,7 +140,7 @@ function notifyAllAbout(user, type) {
   var keys = Object.keys(users);
   for (var i = 0; i < keys.length; i++) {
     var channel = users[keys[i]];
-    console.log("about to channel write in notifyAllAbout; event type: " + type + ", user: " + user);
+    debugLog("about to channel write in notifyAllAbout; event type: " + type + ", data: " + user);
     channel.write("event: " + type + "\n");
     channel.write("data: " + user + "\n\n");
   }
@@ -166,8 +175,8 @@ function verifyAssertion(ast, aud, cb) {
       if (val.status == "okay") {
         cb(val.email);
       } else {
-        console.log(data);
-        console.log(val);
+        debugLog(data);
+        debugLog(val);
         cb(false);
       }
     });

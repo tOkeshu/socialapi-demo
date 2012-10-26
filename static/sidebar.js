@@ -31,8 +31,7 @@ function onLoad() {
 }
 
 function onContactClick(aEvent) {
-  var to = aEvent.target.value;
-  console.log("to = " + to);
+  var to = aEvent.target.innerHTML;
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
     var win = gChats[to].win;
@@ -122,7 +121,7 @@ function signedIn(aEmail) {
   document.cookie="userdata="+JSON.stringify(userdata);
 
   gUsername = aEmail;
-  gContacts[aEmail] = null; // Avoid displaying the user in the contact list.
+  gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
 
   userIsConnected(userdata); // FIXME: remove once we have a working SocialAPI worker.
 }
@@ -131,7 +130,6 @@ function signout() {
   navigator.id.logout();
 
   // send an empty user object to signal a signout to firefox
-  document.cookie="userdata=";
   delete gContacts[gUsername];
   gUsername = "";
 
@@ -249,15 +247,10 @@ function setupEventSource() {
     if (e.data in gContacts) {
       return;
     }
-    var button = document.createElement("button");
-    button.setAttribute("value", e.data);
-    button.textContent = e.data;
-    button.setAttribute("class", "userButton");
-    var c = document.createElement("li");
-    c.setAttribute("id", e.data);
-    c.appendChild(button);
-    document.getElementById("contacts").appendChild(c);
-    $("li > button").button().click(onContactClick);
+    var button = $('<button class="userButton">' + e.data + '</button>');
+    var c = $("<li>");
+    $("#contacts").append(c.append(button));
+    button.click(onContactClick);
     gContacts[e.data] = c;
   }, false);
 
@@ -265,8 +258,7 @@ function setupEventSource() {
     if (!gContacts[e.data]) {
       return;
     }
-    var c = gContacts[e.data];
-    c.parentNode.removeChild(c);
+    gContacts[e.data].remove();
     delete gContacts[e.data];
   }, false);
 

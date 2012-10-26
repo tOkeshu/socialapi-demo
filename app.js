@@ -1,11 +1,12 @@
 var express = require("express"),
     https   = require("https"),
+    sys     = require("sys"),
     app     = express();
 
 var debugLogging = true;
-function debugLog(arg) {
+function debugLog(str) {
   if (debugLogging) {
-    console.log(arg);
+    sys.debug(str);
   }
 }
 

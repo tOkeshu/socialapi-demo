@@ -246,7 +246,7 @@ function setupEventSource() {
   source.addEventListener("ping", function(e) {}, false);
 
   source.addEventListener("userjoined", function(e) {
-    if (!e.data || e.data in gContacts) {
+    if (e.data in gContacts) {
       return;
     }
     var button = document.createElement("button");
@@ -262,7 +262,7 @@ function setupEventSource() {
   }, false);
 
   source.addEventListener("userleft", function(e) {
-    if (!e.data || !gContacts[e.data]) {
+    if (!gContacts[e.data]) {
       return;
     }
     var c = gContacts[e.data];

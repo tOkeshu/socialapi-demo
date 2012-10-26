@@ -19,13 +19,10 @@ var users = {};
 var port = process.env.PORT || 5000;
 var audience = process.env.AUDIENCE || "http://webrtc-social.herokuapp.com";
 
-
-  
 // We use EventSource for presence. The events are named "userjoined"
 // and "userleft".
 
 app.get("/events", function(req, res) {
-  
   debugLog("/events connection opened");
   if (!req.session.user) {
     res.send(401, "Unauthorized, events access denied");
@@ -58,9 +55,8 @@ app.get("/events", function(req, res) {
 
   // Add to current list of online users.
   users[req.session.user] = res;
-  debugLog("added " + req.session.user + " to users, # known now: " + 
+  debugLog("added " + req.session.user + " to users, # known now: " +
            Object.keys(users).length);
-  
 });
 
 app.post("/login", function(req, res) {
@@ -81,7 +77,7 @@ app.post("/login", function(req, res) {
   });
 });
 
-// quiet is set to true when the connection has been closed by the client, so 
+// quiet is set to true when the connection has been closed by the client, so
 // sending a response will cause an error
 function logout(req, res, quiet) {
   if (!req.session.user && !quiet) {
@@ -93,7 +89,7 @@ function logout(req, res, quiet) {
   req.session.destroy(function() {
     notifyAllAbout(user, "userleft");
     delete users[user];
-    if (!quiet) { 
+    if (!quiet) {
       res.send(200);
     }
   });

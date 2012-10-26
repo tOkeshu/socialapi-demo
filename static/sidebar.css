@@ -65,9 +65,11 @@ BODY {
 }
 
 .userButton {
+  width: 100%;
   font-size: 12px;
   font-weight: bold;
-  border-width: 0;
-  background-color: white;
-  background: none;
+}
+
+.userButton:hover {
+  background-color: #a8a;
 }

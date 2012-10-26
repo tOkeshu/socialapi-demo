@@ -7,7 +7,8 @@
   <style>
     * {
       margin: 0 0;
-      padding: 0 0
+      padding: 0 0;
+      font-family:"Lucida Grande",Tahoma,sans-serif;
     }
     #remoteVideo {
       position: absolute;
@@ -35,17 +36,22 @@
       text-align: center;
     }
     #chat {
-      overflow: auto;
+      overflow: hidden;
       position: absolute;
       top: 193px;
       width: 258px;
       height: 53px;
-      background-color: #A8A8A8;
     }
     #localChat {
       position: absolute;
       bottom: 0px;
       width: 258px;
+    }
+    span.Them {
+      color: rgb(200,80,80);
+    }
+    span.Me {
+      color: rgb(80,80,200);
     }
   </style>
 </head>

@@ -172,7 +172,7 @@ function setupDataChannel(originator, pc, target) {
 
 function insertChatMessage(win, from, message) {
   var box = win.document.getElementById("chat");
-  box.innerHTML += "<strong>" + from + "</strong>: " + message + "<br/>";
+  box.innerHTML += "<span class=\"" + from + "\">" + from + "</span>: " + message + "<br/>";
   box.scrollTop = box.scrollTopMax;
 }
 

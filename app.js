@@ -3,7 +3,7 @@ var express = require("express"),
     app     = express();
 
 var debugLogging = true;
-var debugLog(arg) {
+function debugLog(arg) {
   if (debugLogging) {
     console.log(arg);
   }
@@ -58,6 +58,9 @@ app.get("/events", function(req, res) {
 
   // Add to current list of online users.
   users[req.session.user] = res;
+  debugLog("added " + req.session.user + " to users, # known now: " + 
+           Object.keys(users).length);
+  
 });
 
 app.post("/login", function(req, res) {

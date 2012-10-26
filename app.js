@@ -51,7 +51,7 @@ app.get("/events", function(req, res) {
   debugLog("number of known users: " + keys.length);
   for (var i = 0; i < keys.length; i++) {
     var user = keys[i];
-    debugLog("about to send userjoined event, data: " + data);
+    debugLog("about to send userjoined event, data: " + user);
     res.write("event: userjoined\n");
     res.write("data: " + user + "\n\n");
   }

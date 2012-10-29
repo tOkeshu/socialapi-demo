@@ -8,7 +8,6 @@ Quick Start
 2. Create a new profile.  You don't want to be messing with all these prefs in a profile that you use regularly.
 
 3. Set the following boolean prefs via about:config
-
     social.enabled: true
     media.navigator.enabled: true
     media.navigator.permission.disabled: true
@@ -16,7 +15,6 @@ Quick Start
     dom.disable_open_during_load: false
 
 4. Set the SocialAPI provider, also via about:config. It's ok that the provider is named "facebook", the SocialAPI grabs the first pref prefixed with social.manifest.
-
     social.manifest.facebook: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"WebRTC Social Demo","iconURL":"http://webrtc-social.herokuapp.com/icon.png","workerURL":"http://webrtc-social.herokuapp.com/worker.js","sidebarURL":"http://webrtc-social.herokuapp.com/sidebar.htm","origin":"http://webrtc-social.herokuapp.com","enabled":true,"last_modified":135101330568}
 
 5. Restart the browser.

@@ -9,15 +9,23 @@ Quick Start
 
 3. Set the following boolean prefs via about:config
 
-    social.enabled: true
-    media.navigator.enabled: true
-    media.navigator.permission.disabled: true
-    media.peerconnection.enabled: true
-    dom.disable_open_during_load: false
+        social.enabled: true
+        media.navigator.enabled: true
+        media.navigator.permission.disabled: true
+        media.peerconnection.enabled: true
+        dom.disable_open_during_load: false
 
-4. Set the SocialAPI provider, also via about:config. It's ok that the provider is named "facebook", the SocialAPI grabs the first pref prefixed with social.manifest.
+4. Set the SocialAPI provider, also via about:config. It's ok that the provider is named "facebook", the SocialAPI grabs the first pref prefixed with social.manifest. Note that the pref is actually a JSON string.
 
-    social.manifest.facebook: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"WebRTC Social Demo","iconURL":"http://webrtc-social.herokuapp.com/icon.png","workerURL":"http://webrtc-social.herokuapp.com/worker.js","sidebarURL":"http://webrtc-social.herokuapp.com/sidebar.htm","origin":"http://webrtc-social.herokuapp.com","enabled":true,"last_modified":135101330568}
+        social.manifest.facebook: {
+          "location":"http://webrtc-social.herokuapp.com/manifest.json",
+          "name":"WebRTC Social Demo",
+          "iconURL":"http://webrtc-social.herokuapp.com/icon.png",
+          "workerURL":"http://webrtc-social.herokuapp.com/worker.js",
+          "sidebarURL":"http://webrtc-social.herokuapp.com/sidebar.htm",
+          "origin":"http://webrtc-social.herokuapp.com",
+          "enabled":true,"last_modified":135101330568
+        }
 
 5. Restart the browser.
 

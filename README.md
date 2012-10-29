@@ -35,6 +35,7 @@ Local Development
 -----------------
 It is easier to hack on this by setting up a local server:
 
+    $ npm install
     $ env PORT=5000 AUDIENCE="http://localhost:5000" node app.js
 
 and set the SocialAPI provider to:

@@ -71,17 +71,26 @@ app.post("/login", function(req, res) {
     res.send(500, "Invalid login request");
     return;
   }
-  verifyAssertion(req.body.assertion, audience, function(val) {
-    if (val) {
-      req.session.regenerate(function() {
-        req.session.user = val;
-        notifyAllAbout(val, "userjoined");
-        res.send(200, val);
-      });
-    } else {
-      res.send(401, "Invalid Persona assertion");
-    }
-  });
+
+  if (req.body.fake) {
+    finishLogin(req.body.assertion);
+  } else {
+    verifyAssertion(req.body.assertion, audience, function(val) {
+      if (val) {
+        finishLogin(val);
+      } else {
+        res.send(401, "Invalid Persona assertion");
+      }
+    });
+  }
+
+  function finishLogin(user) {
+    req.session.regenerate(function() {
+      req.session.user = user;
+      notifyAllAbout(user, "userjoined");
+      res.send(200, user);
+    });
+  }
 });
 
 // quiet is set to true when the connection has been closed by the client, so

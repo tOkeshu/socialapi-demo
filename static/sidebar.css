@@ -28,6 +28,16 @@ BODY {
   float:right;
   padding-right:6px;
 }
+#guest {
+  position:absolute;
+  top:1%;
+  right:0px;
+  padding:2px;
+}
+#user {
+  width:70%;
+  margin-left:5px;
+}
 #useridbox {
   font-size:10px;
   left:0px;

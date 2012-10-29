@@ -2,32 +2,42 @@ var gContacts = {};
 var gChats = {};
 var gUsername = "";
 
+function remoteLogin(options) {
+  $.ajax({
+    type: 'POST',
+    url: '/login',
+    data: options,
+    success: function(res, status, xhr) { signedIn(xhr.responseText); },
+    error: function(xhr, status, err) { alert("login failure" + err); }
+  });
+}
+
+function remoteLogout() {
+  $.ajax({
+    type: 'POST',
+    url: '/logout',
+    success: function(res, status, xhr) { },
+    error: function(xhr, status, err) { alert("logout failure" + res); }
+  });
+}
+
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
   if (!worker) {
     document.body.style.border = "3px solid red";
   }
 
-  navigator.id.watch({
-    loggedInUser: null,
-    onlogin: function(assertion) {
-      $.ajax({
-        type: 'POST',
-        url: '/login',
-        data: {assertion: assertion},
-        success: function(res, status, xhr) { signedIn(xhr.responseText); },
-        error: function(xhr, status, err) { alert("login failure" + res); }
-      });
-    },
-    onlogout: function() {
-      $.ajax({
-        type: 'POST',
-        url: '/logout',
-        success: function(res, status, xhr) { },
-        error: function(xhr, status, err) { alert("logout failure" + res); }
-      });
-    }
-  });
+  if (navigator.id) {
+    navigator.id.watch({
+      loggedInUser: null,
+      onlogin: function(assertion) {
+        remoteLogin({assertion: assertion});
+      },
+      onlogout: function() {
+        remoteLogout();
+      }
+    });
+  }
 }
 
 function onContactClick(aEvent) {
@@ -105,11 +115,25 @@ function getAudio(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
   });
 }
 
+function startGuest() {
+  $("#signin").hide();
+  $("#guest").html(
+    '<input type="text" id="user"/>' +
+    '<input type="button" value="Login" onclick="javascript:guestLogin();"/>'
+  );
+}
+
+function guestLogin() {
+  var user = $("#user").attr("value");
+  remoteLogin({assertion: user, fake: true});
+}
+
 function signin() {
   navigator.id.request();
 }
 
 function signedIn(aEmail) {
+  $("#guest").hide();
   var end = location.href.indexOf("sidebar.htm");
   var baselocation = location.href.substr(0, end);
   var userdata = {
@@ -130,6 +154,8 @@ function signout() {
   // send an empty user object to signal a signout to firefox
   delete gContacts[gUsername];
   gUsername = "";
+
+  window.location.reload();
 }
 
 var filename = "default.txt";

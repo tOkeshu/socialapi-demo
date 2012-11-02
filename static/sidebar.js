@@ -52,7 +52,7 @@ function onContactClick(aEvent) {
         var video = doc.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
-      } else if (type = "audio") {
+      } else if (type == "audio") {
         var audio = doc.getElementById("remoteAudio");
         audio.mozSrcObject = obj.stream;
         audio.play();
@@ -141,7 +141,7 @@ function signedIn(aEmail) {
     userName: aEmail,
     dispayName: aEmail,
     profileURL: baselocation + "/user.html"
-  }
+  };
   document.cookie="userdata="+JSON.stringify(userdata);
 
   gUsername = aEmail;
@@ -183,7 +183,7 @@ function setupDataChannel(originator, pc, target) {
         insertChatMessage(win, "Me", message);
       } catch(e) {}
       return false;
-    }
+    };
   };
 
   pc.onclosedconnection = function() {
@@ -290,13 +290,13 @@ function setupEventSource() {
       var pc = new mozRTCPeerConnection();
       var win = gChats[data.from].win;
       pc.onaddstream = function(obj) {
-        var doc = win.document
+        var doc = win.document;
         var type = obj.type;
         if (type == "video") {
           var video = doc.getElementById("remoteVideo");
           video.mozSrcObject = obj.stream;
           video.play();
-        } else if (type = "audio") {
+        } else if (type == "audio") {
           var audio = doc.getElementById("remoteAudio");
           audio.mozSrcObject = obj.stream;
           audio.play();
@@ -313,10 +313,10 @@ function setupEventSource() {
               $.ajax({type: 'POST', url: '/answer',
                       data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
               pc.connectDataConnection(5001,5000);
-            }, function(err) {alert("failed to setLocalDescription, " + err)});
-          }, function(err) {alert("failed to createAnswer, " + err)});
+            }, function(err) {alert("failed to setLocalDescription, " + err);});
+          }, function(err) {alert("failed to createAnswer, " + err);});
         }, true);
-      }, function(err) {alert("failed to setRemoteDescription, " + err)});
+      }, function(err) {alert("failed to setRemoteDescription, " + err);});
     });
   }, false);
 
@@ -328,7 +328,7 @@ function setupEventSource() {
       // them will happen in onaddstream.
       // We need to establish the data connection though.
       pc.connectDataConnection(5000,5001);
-    }, function(err) {alert("failed to setRemoteDescription with answer, " + err)});
+    }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 }
 
@@ -351,7 +351,7 @@ function userIsDisconnected() {
   $("#usericonbox").hide();
 }
 
-messageHandlers = {
+var messageHandlers = {
   "worker.connected": function(data) {
     // our port has connected with the worker, do some initialization
     // worker.connected is our own custom message
@@ -364,7 +364,7 @@ messageHandlers = {
     } else {
       userIsDisconnected();
     }
-  },
+  }
 };
 
 navigator.mozSocial.getWorker().port.onmessage = function onmessage(e) {
@@ -407,7 +407,7 @@ function notify(type) {
         actionArgs: {
           toURL: baselocation
         }
-      }
+      };
       port.postMessage({topic:"social.notification-create", data: data});
       break;
     case "chat-request":

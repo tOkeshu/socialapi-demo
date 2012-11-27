@@ -32,7 +32,7 @@ onconnect = function(e) {
 
       var msg = e.data;
       if (!msg) {
-        log("onmessage called with no data")
+        log("onmessage called with no data");
         return;
       }
       // handle the special message that tells us a port is closing.
@@ -57,8 +57,8 @@ onconnect = function(e) {
           log(e+"\n");
         }
       }
-    }
-    port.postMessage({topic: "worker.connected"})
+    };
+    port.postMessage({topic: "worker.connected"});
 
 
   } catch (e) {
@@ -82,7 +82,7 @@ var handlers = {
       _broadcastReceivers.push(port);
     else {
       var i = _broadcastReceivers.indexOf(port);
-      f (i != -1)
+      if (i != -1)
         _broadcastReceivers.splice(i, 1);
     }
   },
@@ -139,14 +139,6 @@ var handlers = {
       userData = newUserData;
       port.postMessage({topic: "social.user-profile", data: userData});
       broadcast('social.user-profile', userData);
-      if (userData.userName)
-        port.postMessage({topic: 'social.ambient-notification',
-              data: {
-                name: "test",
-                iconURL: RECOMMEND_ICON,
-                counter: "10",
-                contentPanel: baselocation + "/statusPanel.html"
-              }});
     }
     } catch(e) {
       dump(e.stack+"\n");

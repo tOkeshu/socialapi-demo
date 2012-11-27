@@ -10,6 +10,7 @@ Quick Start
 3. Set the following boolean prefs via about:config
 
         social.enabled: true
+        social.active: true
         media.navigator.enabled: true
         media.navigator.permission.disabled: true
         media.peerconnection.enabled: true

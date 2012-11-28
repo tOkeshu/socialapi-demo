@@ -1,19 +1,19 @@
+<!DOCTYPE html>
 <html>
 <head>
-	<title>Demo Social Service</title>
-</head>
-<link rel="manifest" type="text/json" href="./manifest.json"></link>
-
+<title>Demo WebRTC Social Service</title>
+<link rel="manifest" type="text/json" href="manifest.json">
 <script>
 function activate() {
-  var event = new CustomEvent("ActivateSocialFeature");
-  document.dispatchEvent(event);
+  document.dispatchEvent(new CustomEvent("ActivateSocialFeature"));
 }
 </script>
+</head>
 <body>
 
-nothing to see here
+<button onclick="activate()">Activate The Demo WebRTC Provider</button>
 
-<button onclick="activate()">Activate The Demo Provider</button> 
+<p>Code at <a href="https://github.com/anantn/socialapi-demo">https://github.com/anantn/socialapi-demo</a></p>
+
 </body>
 </html>

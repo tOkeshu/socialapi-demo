@@ -1,10 +1,10 @@
 {
   "services": {
     "social": {
-    "name": "WebRTC Social Demo",
-    "iconURL": "/static/icon.png",
-    "workerURL": "/static/worker.js",
-    "sidebarURL": "/static/sidebar.htm",
-   }
+      "name": "WebRTC Social Demo",
+      "iconURL": "/icon.png",
+      "workerURL": "/worker.js",
+      "sidebarURL": "/sidebar.htm",
+    }
   }
 }

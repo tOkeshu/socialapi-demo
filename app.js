@@ -39,9 +39,8 @@ app.get("/events", function(req, res) {
 
   // Ping every 1 second.
   var pinger = setInterval(function() {
-    if (!res) return;
-    res.write("event: ping\n");
-    res.write("data: ping\n\n");
+    if (res)
+      channelWrite(res, "ping", "ping");
   }, 1000);
 
   // Auto logout on disconnect.
@@ -56,8 +55,7 @@ app.get("/events", function(req, res) {
   for (var i = 0; i < keys.length; i++) {
     var user = keys[i];
     debugLog("about to send userjoined event, data: " + user);
-    res.write("event: userjoined\n");
-    res.write("data: " + user + "\n\n");
+    channelWrite(res, "userjoined", user);
   }
 
   // Add to current list of online users.
@@ -144,20 +142,19 @@ function processRequest(req, res, type) {
     return;
   }
 
-  channel.write("event: " + type + "\n");
-  channel.write("data: " + JSON.stringify(req.body));
-  channel.write("\n\n");
-
+  channelWrite(channel, type, JSON.stringify(req.body));
   res.send(200);
+}
+
+function channelWrite(aChannel, aEventType, aData) {
+  aChannel.write("event: " + aEventType + "\ndata: " + aData + "\n\n");
 }
 
 function notifyAllAbout(user, type) {
   var keys = Object.keys(users);
   for (var i = 0; i < keys.length; i++) {
-    var channel = users[keys[i]];
     debugLog("about to channel write in notifyAllAbout; event type: " + type + ", data: " + user);
-    channel.write("event: " + type + "\n");
-    channel.write("data: " + user + "\n\n");
+    channelWrite(users[keys[i]], type, user);
   }
 }
 

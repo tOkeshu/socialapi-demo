@@ -59,8 +59,10 @@ app.get("/events", function(req, res) {
   }
 
   // Add to current list of online users.
-  users[req.session.user] = res;
-  debugLog("added " + req.session.user + " to users, # known now: " +
+  var user = req.session.user;
+  notifyAllAbout(user, "userjoined");
+  users[user] = res;
+  debugLog("added " + user + " to users, # known now: " +
            Object.keys(users).length);
 });
 
@@ -85,7 +87,6 @@ app.post("/login", function(req, res) {
   function finishLogin(user) {
     req.session.regenerate(function() {
       req.session.user = user;
-      notifyAllAbout(user, "userjoined");
       res.send(200, user);
     });
   }

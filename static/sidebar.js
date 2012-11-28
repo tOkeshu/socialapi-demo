@@ -17,7 +17,7 @@ function remoteLogout() {
     type: 'POST',
     url: '/logout',
     success: function(res, status, xhr) { },
-    error: function(xhr, status, err) { alert("logout failure" + res); }
+    error: function(xhr, status, err) { alert("logout failure" + err); }
   });
 }
 
@@ -34,7 +34,8 @@ function onLoad() {
         remoteLogin({assertion: assertion});
       },
       onlogout: function() {
-        remoteLogout();
+        if (gUsername)
+          remoteLogout();
       }
     });
   }
@@ -134,7 +135,8 @@ function signin() {
 
 function signedIn(aEmail) {
   $("#guest").hide();
-  var end = location.href.indexOf("sidebar.htm");
+  $("#signin").hide();
+  var end = location.href.indexOf("/sidebar.htm");
   var baselocation = location.href.substr(0, end);
   var userdata = {
     portrait: baselocation + "/user.png",
@@ -151,11 +153,10 @@ function signedIn(aEmail) {
 function signout() {
   navigator.id.logout();
 
-  // send an empty user object to signal a signout to firefox
   delete gContacts[gUsername];
   gUsername = "";
 
-  window.location.reload();
+  reload();
 }
 
 var filename = "default.txt";
@@ -263,6 +264,10 @@ function setupFileSharing(win, dc, target) {
 
 function setupEventSource() {
   var source = new EventSource("events");
+  source.onerror = function(e) {
+    reload();
+  };
+
   source.addEventListener("ping", function(e) {}, false);
 
   source.addEventListener("userjoined", function(e) {
@@ -375,9 +380,11 @@ navigator.mozSocial.getWorker().port.onmessage = function onmessage(e) {
   }
 };
 
-function workerReload() {
-  var worker = navigator.mozSocial.getWorker();
-  worker.port.postMessage({topic: "worker.reload", data: true});
+function reload() {
+  document.cookie = 'userdata=; expires=Fri, 27 Jul 2001 02:47:11 UTC; path=/';
+  navigator.mozSocial.getWorker()
+           .port.postMessage({topic: "worker.reload", data: true});
+  window.location.reload();
 }
 
 function openChat(aTarget, aCallback) {

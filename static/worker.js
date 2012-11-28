@@ -69,6 +69,7 @@ var userData = {};
 var handlers = {
   'worker.reload': function(port, msg) {
     broadcast(msg.topic, msg.data);
+    userData = {};
     apiPort.postMessage({topic: 'social.reload-worker'});
   },
   'social.initialize': function(port, data) {

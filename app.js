@@ -46,7 +46,7 @@ app.get("/events", function(req, res) {
   // Auto logout on disconnect.
   req.on("close", function() {
     clearInterval(pinger);
-    logout(req, res, true);
+    logout(req);
   });
 
   // First notify this user of all users current.
@@ -92,11 +92,12 @@ app.post("/login", function(req, res) {
   }
 });
 
-// quiet is set to true when the connection has been closed by the client, so
-// sending a response will cause an error
-function logout(req, res, quiet) {
-  if (!req.session.user && !quiet) {
-    res.send(401, "No user currently logged in");
+// res has a value if the client sent a /logout request and expects a reply,
+// and is undefined if the connection has been closed by the client.
+function logout(req, res) {
+  if (!req.session.user) {
+    if (res)
+      res.send(401, "No user currently logged in");
     return;
   }
 
@@ -104,7 +105,7 @@ function logout(req, res, quiet) {
   req.session.destroy(function() {
     notifyAllAbout(user, "userleft");
     delete users[user];
-    if (!quiet) {
+    if (res) {
       res.send(200);
     }
   });

@@ -103,8 +103,8 @@ function logout(req, res) {
 
   var user = req.session.user;
   req.session.destroy(function() {
-    notifyAllAbout(user, "userleft");
     delete users[user];
+    notifyAllAbout(user, "userleft");
     if (res) {
       res.send(200);
     }

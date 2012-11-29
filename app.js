@@ -66,6 +66,29 @@ app.get("/events", function(req, res) {
            Object.keys(users).length);
 });
 
+app.post("/call", function(req, res) {
+  if (!req.body.assertion) {
+    res.send(500, "Invalid login request");
+    return;
+  }
+
+  verifyAssertion(req.body.assertion, audience, function(val) {
+    if (val) {
+      // XXX de-dupe with processRequest?
+      var channel = users[val];
+      if (!channel) {
+        res.send(400, "User not logged in for making calls");
+        return;
+      }
+
+      channelWrite(channel, "call", JSON.stringify(req.body));
+      res.send(200);
+    } else {
+      res.send(401, "Invalid Persona assertion");
+    }
+  });
+});
+
 app.post("/login", function(req, res) {
   if (!req.body.assertion) {
     res.send(500, "Invalid login request");
@@ -76,7 +99,13 @@ app.post("/login", function(req, res) {
     finishLogin(req.body.assertion);
   } else {
     verifyAssertion(req.body.assertion, audience, function(val) {
+      var noshow = req.body.noshow;
       if (val) {
+        if (noshow) {
+          debugLog("User " + val + " logged in, but noshow specified");
+          res.send(200, val);
+          return;
+        }
         finishLogin(val);
       } else {
         res.send(401, "Invalid Persona assertion");

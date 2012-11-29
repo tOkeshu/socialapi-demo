@@ -16,8 +16,8 @@ function broadcast(topic, payload)
 {
   // we need to broadcast to all ports connected to this shared worker
   for (var i = 0; i < _broadcastReceivers.length; i++) {
-    //log("about to broadcast to " + _broadcastReceivers[i]);
-  _broadcastReceivers[i].postMessage({topic: topic, data: payload});
+    //log("about to broadcast to " + _broadcastReceivers[i] + "\n");
+    _broadcastReceivers[i].postMessage({topic: topic, data: payload});
   }
 }
 
@@ -67,6 +67,9 @@ onconnect = function(e) {
 var userData = {};
 // Messages from the sidebar and chat windows:
 var handlers = {
+  'worker.connected': function(port, msg) {
+    log("worker.connected");
+  },
   'worker.reload': function(port, msg) {
     broadcast(msg.topic, msg.data);
     userData = {};

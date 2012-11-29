@@ -2,25 +2,6 @@ var gContacts = {};
 var gChats = {};
 var gUsername = "";
 
-function remoteLogin(options) {
-  $.ajax({
-    type: 'POST',
-    url: '/login',
-    data: options,
-    success: function(res, status, xhr) { signedIn(xhr.responseText); },
-    error: function(xhr, status, err) { alert("login failure" + err); }
-  });
-}
-
-function remoteLogout() {
-  $.ajax({
-    type: 'POST',
-    url: '/logout',
-    success: function(res, status, xhr) { },
-    error: function(xhr, status, err) { alert("logout failure" + err); }
-  });
-}
-
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
   if (!worker) {
@@ -42,10 +23,13 @@ function onLoad() {
 }
 
 function onContactClick(aEvent) {
-  var to = aEvent.target.innerHTML;
-  openChat(to, function(aWin) {
+  callPerson(aEvent.target.innerHTML);
+}
+
+function callPerson(aPerson) {
+  openChat(aPerson, function(aWin) {
     var pc = new mozRTCPeerConnection();
-    var win = gChats[to].win;
+    var win = gChats[aPerson].win;
     pc.onaddstream = function(obj) {
       var doc = win.document;
       var type = obj.type;
@@ -61,13 +45,13 @@ function onContactClick(aEvent) {
         alert("sender onaddstream of unknown type, obj = " + obj.toSource());
       }
     };
-    setupDataChannel(true, pc, to);
-    gChats[to].pc = pc;
+    setupDataChannel(true, pc, aPerson);
+    gChats[aPerson].pc = pc;
     getAudioVideo(aWin, pc, function() {
       pc.createOffer(function(offer) {
         pc.setLocalDescription(offer, function() {
           $.ajax({type: 'POST', url: '/offer',
-                  data: {to: to, from: gUsername, request: JSON.stringify(offer)}});},
+                  data: {to: aPerson, from: gUsername, request: JSON.stringify(offer)}});},
           function(err) { alert("setLocalDescription failed: " + err); });
       }, function(err) { alert("createOffer failed: " + err); });
     });
@@ -148,6 +132,9 @@ function signedIn(aEmail) {
 
   gUsername = aEmail;
   gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
+}
+
+function signedOut() {
 }
 
 function signout() {
@@ -334,6 +321,11 @@ function setupEventSource() {
       // We need to establish the data connection though.
       pc.connectDataConnection(5000,5001);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
+  }, false);
+
+  source.addEventListener("call", function(e) {
+    var data = JSON.parse(e.data);
+    callPerson(data.who);
   }, false);
 }
 

@@ -28,8 +28,8 @@ function onContactClick(aEvent) {
 
 function callPerson(aPerson) {
   openChat(aPerson, function(aWin) {
-    var pc = new mozRTCPeerConnection();
     var win = gChats[aPerson].win;
+    var pc = new win.mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var doc = win.document;
       var type = obj.type;
@@ -279,8 +279,8 @@ function setupEventSource() {
   source.addEventListener("offer", function(e) {
     var data = JSON.parse(e.data);
     openChat(data.from, function(aWin) {
-      var pc = new mozRTCPeerConnection();
       var win = gChats[data.from].win;
+      var pc = new win.mozRTCPeerConnection();
       pc.onaddstream = function(obj) {
         var doc = win.document;
         var type = obj.type;

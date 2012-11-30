@@ -17,8 +17,14 @@ app.use(express.session());
 app.use(express.static(__dirname + "/static"));
 
 var users = {};
-var port = process.env.PORT || 5000;
-var audience = process.env.AUDIENCE || "http://webrtc-social.herokuapp.com";
+var port = process.env.VMC_APP_PORT || process.env.PORT || 5000;
+var audience;
+if (process.env.AUDIENCE)
+  audience = process.env.AUDIENCE;
+else if (process.env.VMC_APP_NAME)
+  audience = "https://" + process.env.VMC_APP_NAME + ".vcap.mozillalabs.com";
+else
+  audience = "http://webrtc-social.herokuapp.com";
 
 // We use EventSource for presence. The events are named "userjoined"
 // and "userleft".

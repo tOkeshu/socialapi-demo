@@ -73,6 +73,8 @@ var handlers = {
   'worker.reload': function(port, msg) {
     broadcast(msg.topic, msg.data);
     userData = {};
+    apiPort.postMessage({topic: "social.user-profile", data: userData});
+    broadcast('social.user-profile', userData);
     apiPort.postMessage({topic: 'social.reload-worker'});
   },
   'social.initialize': function(port, data) {
@@ -101,7 +103,7 @@ var handlers = {
       }
     }
     if (!newUserData) {
-      //dump("no user data!\n");
+      // Logging out is handled by worker.reload above.
       return;
     }
     if (userData.userName != newUserData.userName) {

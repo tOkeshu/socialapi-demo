@@ -5,20 +5,26 @@
   <script src="./js/jquery-ui-1.9.1.custom.js"></script>
   <script src="./user.js" type="text/javascript"></script>
   <script src="./serverConnections.js" type="text/javascript"></script>
- <script src="https://login.persona.org/include.js"></script>
+  <script src="./personaHandler.js" type="text/javascript"></script>
+  <script src="https://login.persona.org/include.js"></script>
 </head>
 
 <body onload="onLoad()">
-
+  <div id="signin">
+    <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
+    <div id="signin_error"></div>
+ </div>
+  <div>
+ </div>
 <img src="./user.png"/>
 <div id="header">
   <div id="useridbox" style="display:none"></div>
   <div id="nouserid">Welcome!</div>
+  <div><button id="signout" onclick="signout()" style="display:none">signout</button></div>
 </div>
 <form>
 <input type="text" id="contactEmail"/>
 <input type="button" value="Call" onclick="startCall();"/>
 </form>
-
 </body>
 </html>

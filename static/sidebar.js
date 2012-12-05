@@ -2,24 +2,22 @@ var gContacts = {};
 var gChats = {};
 var gUsername = "";
 
+function onPersonaLogin(assertion) {
+  remoteLogin({assertion: assertion});
+}
+
+function onPersonaLogout(assertion) {
+  if (gUsername)
+    remoteLogout();
+}
+
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
   if (!worker) {
     document.body.style.border = "3px solid red";
   }
 
-  if (navigator.id) {
-    navigator.id.watch({
-      loggedInUser: null,
-      onlogin: function(assertion) {
-        remoteLogin({assertion: assertion});
-      },
-      onlogout: function() {
-        if (gUsername)
-          remoteLogout();
-      }
-    });
-  }
+  watchPersonaLogins(onPersonaLogin, onPersonaLogout);
 }
 
 function onContactClick(aEvent) {
@@ -113,10 +111,6 @@ function guestLogin() {
   remoteLogin({assertion: user, fake: true});
 }
 
-function signin() {
-  navigator.id.request();
-}
-
 function signedIn(aEmail) {
   $("#guest").hide();
   $("#signin").hide();
@@ -135,11 +129,6 @@ function signedIn(aEmail) {
 }
 
 function signedOut() {
-}
-
-function signout() {
-  navigator.id.logout();
-
   delete gContacts[gUsername];
   gUsername = "";
 

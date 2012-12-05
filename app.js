@@ -64,6 +64,7 @@ app.get("/events", function(req, res) {
   }
 
   // Add to current list of online users.
+  // XXX This doesn't handle multiple logins of the same user from different clients.
   var user = req.session.user;
   notifyAllAbout(user, "userjoined");
   users[user] = res;
@@ -72,29 +73,28 @@ app.get("/events", function(req, res) {
 });
 
 app.post("/call", function(req, res) {
-  if (!req.body.assertion) {
-    res.send(500, "Invalid login request");
+  if (!req.session.user) {
+    res.send(401, "Unauthorized, access denied");
     return;
   }
 
-  verifyAssertion(req.body.assertion, audience, function(val) {
-    if (val) {
-      // XXX de-dupe with processRequest?
-      var channel = users[val];
-      if (!channel) {
-        res.send(400, "User not logged in for making calls");
-        return;
-      }
+  // XXX de-dupe with processRequest?
+  var channel = users[req.session.user];
+  if (!channel) {
+    res.send(400, "User not logged in for making calls");
+    return;
+  }
 
-      channelWrite(channel, "call", JSON.stringify(req.body));
-      res.send(200);
-    } else {
-      res.send(401, "Invalid Persona assertion");
-    }
-  });
+  channelWrite(channel, "call", JSON.stringify(req.body));
+  res.send(200);
 });
 
 app.post("/login", function(req, res) {
+  if (req.session.user) {
+    debugLog("User session already created!");
+    res.send(200, req.session.user);
+    return;
+  }
   if (!req.body.assertion) {
     res.send(500, "Invalid login request");
     return;
@@ -104,13 +104,7 @@ app.post("/login", function(req, res) {
     finishLogin(req.body.assertion);
   } else {
     verifyAssertion(req.body.assertion, audience, function(val) {
-      var noshow = req.body.noshow;
       if (val) {
-        if (noshow) {
-          debugLog("User " + val + " logged in, but noshow specified");
-          res.send(200, val);
-          return;
-        }
         finishLogin(val);
       } else {
         res.send(401, "Invalid Persona assertion");
@@ -120,6 +114,7 @@ app.post("/login", function(req, res) {
 
   function finishLogin(user) {
     req.session.regenerate(function() {
+      debugLog("Creating user session");
       req.session.user = user;
       res.send(200, user);
     });
@@ -130,10 +125,14 @@ app.post("/login", function(req, res) {
 // and is undefined if the connection has been closed by the client.
 function logout(req, res) {
   if (!req.session.user) {
-    if (res)
+    debugLog(JSON.stringify(req.session) + " " + req.session.user);
+    if (res) {	
+      debugLog("Denying logout");
       res.send(401, "No user currently logged in");
+    }
     return;
   }
+  debugLog("Logging out " + req.session.user);
 
   var user = req.session.user;
   req.session.destroy(function() {

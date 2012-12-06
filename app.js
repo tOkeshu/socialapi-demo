@@ -51,6 +51,7 @@ app.get("/events", function(req, res) {
   // Auto logout on disconnect.
   req.on("close", function() {
     clearInterval(pinger);
+    delete users[(req.connection.remoteAddress + " " + req.connection.remotePort)];
     logout(req);
   });
 
@@ -58,19 +59,35 @@ app.get("/events", function(req, res) {
   var keys = Object.keys(users);
   debugLog("number of known users: " + keys.length);
   for (var i = 0; i < keys.length; i++) {
-    var user = keys[i];
-    debugLog("about to send userjoined event, data: " + user);
-    channelWrite(res, "userjoined", user);
+    var user = users[keys[i]].id;
+    if (user != req.session.user) {
+      debugLog("about to send userjoined event, data: " + user);
+      channelWrite(res, "userjoined", user);
+    }
   }
 
   // Add to current list of online users.
   // XXX This doesn't handle multiple logins of the same user from different clients.
   var user = req.session.user;
+  var key = req.connection.remoteAddress + " " + req.connection.remotePort; 
   notifyAllAbout(user, "userjoined");
-  users[user] = res;
-  debugLog("added " + user + " to users, # known now: " +
+  users[key] = {id: user, response: res};
+  debugLog("added " + user + " to users, with key " + key + " # known now: " +
            Object.keys(users).length);
 });
+
+// XXX Need to handle multiple log-in sessions correctly
+// XXX Need to handle no-call sessions
+function findResponseChannelForUser(aUser) {
+  var keys = Object.keys(users);
+  var channel;
+  for (var i = 0; i < keys.length; i++) {
+    if (users[keys[i]].id == aUser) {
+      return users[keys[i]].response;
+    }
+  }  
+  return "";
+}
 
 app.post("/call", function(req, res) {
   if (!req.session.user) {
@@ -78,8 +95,7 @@ app.post("/call", function(req, res) {
     return;
   }
 
-  // XXX de-dupe with processRequest?
-  var channel = users[req.session.user];
+  var channel = findResponseChannelForUser(req.session.user);
   if (!channel) {
     res.send(400, "User not logged in for making calls");
     return;
@@ -136,7 +152,9 @@ function logout(req, res) {
 
   var user = req.session.user;
   req.session.destroy(function() {
-    delete users[user];
+// XXX Do we need this if events does it for us.
+//    delete users[user];
+// XXX Only notify if this is the last instance of the user.
     notifyAllAbout(user, "userleft");
     if (res) {
       res.send(200);
@@ -171,7 +189,7 @@ function processRequest(req, res, type) {
     return;
   }
 
-  var channel = users[req.body.to];
+  var channel = findResponseChannelForUser(req.body.to);
   if (!channel) {
     res.send(400, "Invalid user for " + type);
     return;
@@ -189,7 +207,7 @@ function notifyAllAbout(user, type) {
   var keys = Object.keys(users);
   for (var i = 0; i < keys.length; i++) {
     debugLog("about to channel write in notifyAllAbout; event type: " + type + ", data: " + user);
-    channelWrite(users[keys[i]], type, user);
+    channelWrite(users[keys[i]].response, type, user);
   }
 }
 

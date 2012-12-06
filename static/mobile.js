@@ -134,6 +134,43 @@ function setupEventSource() {
     delete gContacts[e.data];
   }, false);
 
+  source.addEventListener("offer", function(e) {
+    if (gChat)
+      return;
+
+    $("#content").show();
+
+    var data = JSON.parse(e.data);
+    var pc = new window.mozRTCPeerConnection();
+    pc.onaddstream = function(obj) {
+      var type = obj.type;
+      if (type == "video") {
+        var video = document.getElementById("remoteVideo");
+        video.mozSrcObject = obj.stream;
+        video.play();
+      } else if (type == "audio") {
+        var audio = document.getElementById("remoteAudio");
+        audio.mozSrcObject = obj.stream;
+        audio.play();
+      } else {
+        alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
+      }
+    };
+    setupDataChannel(false, pc, data.from);
+    gChat = pc;
+    pc.setRemoteDescription(JSON.parse(data.request), function() {
+      getAudioVideo(window, pc, function() {
+        pc.createAnswer(function(answer) {
+          pc.setLocalDescription(answer, function() {
+            $.ajax({type: 'POST', url: '/answer',
+                    data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
+            pc.connectDataConnection(5001,5000);
+          }, function(err) {alert("failed to setLocalDescription, " + err);});
+        }, function(err) {alert("failed to createAnswer, " + err);});
+      }, true);
+    }, function(err) {alert("failed to setRemoteDescription, " + err);});
+  }, false);
+
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
     var pc = gChat;

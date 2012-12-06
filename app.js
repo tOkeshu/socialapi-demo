@@ -69,7 +69,7 @@ app.get("/events", function(req, res) {
   // Add to current list of online users.
   // XXX This doesn't handle multiple logins of the same user from different clients.
   var user = req.session.user;
-  var key = req.connection.remoteAddress + " " + req.connection.remotePort; 
+  var key = req.connection.remoteAddress + " " + req.connection.remotePort;
   notifyAllAbout(user, "userjoined");
   users[key] = {id: user, response: res};
   debugLog("added " + user + " to users, with key " + key + " # known now: " +
@@ -85,7 +85,7 @@ function findResponseChannelForUser(aUser) {
     if (users[keys[i]].id == aUser) {
       return users[keys[i]].response;
     }
-  }  
+  }
   return "";
 }
 
@@ -142,7 +142,7 @@ app.post("/login", function(req, res) {
 function logout(req, res) {
   if (!req.session.user) {
     debugLog(JSON.stringify(req.session) + " " + req.session.user);
-    if (res) {	
+    if (res) {
       debugLog("Denying logout");
       res.send(401, "No user currently logged in");
     }

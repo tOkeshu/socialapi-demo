@@ -16,7 +16,7 @@ function signedOut() {
   gUserEmail = "";
   $("#useridbox").text("");
   $("#useridbox").hide();
-  $("#nouserid").show(); 
+  $("#nouserid").show();
   $("#signin").show();
   $("#signout").hide();
   window.location.reload();

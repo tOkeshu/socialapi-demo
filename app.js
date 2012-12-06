@@ -155,7 +155,7 @@ function logout(req, res) {
   // the session id or information in the user data as well. Or key by user, session and port.
   if (!findResponseChannelForUser(user)) {
     req.session.destroy(function() {
-      debugLog("Logging out " + req.session.user);
+      debugLog("Logging out " + user);
 
       // XXX Do we need this if events does it for us.
       //    delete users[user];

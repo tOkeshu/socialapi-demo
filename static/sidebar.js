@@ -389,7 +389,7 @@ function openChat(aTarget, aCallback) {
     win.addEventListener("unload", function() {
       if (!(aTarget in gChats))
         return;
-      $.ajax({type: 'POST', url: '/stopcall', data: {to: aTarget}});
+      stopCall(aTarget);
       var chat = gChats[aTarget];
       chat.pc.close();
       if (chat.dc)

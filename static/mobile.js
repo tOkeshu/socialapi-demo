@@ -46,6 +46,8 @@ function callPerson(aPerson) {
   if (gChat)
     return;
 
+  gChat = {who: aPerson};
+
   $("#call").show();
   $("#header").hide();
   $("#contacts").hide();
@@ -66,12 +68,12 @@ function callPerson(aPerson) {
     }
   };
   setupDataChannel(true, pc, aPerson);
-  gChat = pc;
+  gChat.pc = pc;
   getAudioVideo(window, pc, function() {
     pc.createOffer(function(offer) {
       pc.setLocalDescription(offer, function() {
         $.ajax({type: 'POST', url: '/offer',
-                data: {to: aPerson, from: gUsername, request: JSON.stringify(offer)}});},
+                data: {to: aPerson, request: JSON.stringify(offer)}});},
         function(err) { alert("setLocalDescription failed: " + err); });
     }, function(err) { alert("createOffer failed: " + err); });
   });
@@ -141,9 +143,14 @@ function setupEventSource() {
     if (gChat)
       return;
 
-    $("#content").show();
-
     var data = JSON.parse(e.data);
+
+    gChat = {who: data.from};
+
+    $("#call").show();
+    $("#header").hide();
+    $("#contacts").hide();
+
     var pc = new window.mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var type = obj.type;
@@ -160,13 +167,13 @@ function setupEventSource() {
       }
     };
     setupDataChannel(false, pc, data.from);
-    gChat = pc;
+    gChat.pc = pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
       getAudioVideo(window, pc, function() {
         pc.createAnswer(function(answer) {
           pc.setLocalDescription(answer, function() {
             $.ajax({type: 'POST', url: '/answer',
-                    data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
+                    data: {to: data.from, request: JSON.stringify(answer)}});
             pc.connectDataConnection(5001,5000);
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);});
@@ -176,7 +183,7 @@ function setupEventSource() {
 
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
-    var pc = gChat;
+    var pc = gChat.pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
@@ -184,4 +191,42 @@ function setupEventSource() {
       pc.connectDataConnection(5000,5001);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
+
+  source.addEventListener("stopcall", function(e) {
+    var data = JSON.parse(e.data);
+    if (!gChat)
+      // XXX alert or log?
+      return;
+
+    endCall();
+  }, false);
+}
+
+function closeCall() {
+  if (!gChat)
+    return;
+
+  stopCall(gChat.who);
+  endCall();
+}
+
+function endCall() {
+  const mediaElements = ["remoteVideo", "localVideo", "remoteAudio", "localAudio"];
+  mediaElements.forEach(function (aElemId) {
+    var element = document.getElementById(aElemId);
+    element.pause();
+    if (aElemId.indexOf("local") != -1) {
+      gChat.pc.removeStream(element.mozSrcObject);
+      element.mozSrcObject.stop();
+    }
+    element.mozSrcObject = null;
+  });
+
+  gChat.pc.close();
+  // XXX Don't need to close data connection just yet.
+  gChat = null;
+
+  $("#call").hide();
+  $("#header").show();
+  $("#contacts").show();
 }

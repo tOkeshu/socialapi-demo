@@ -331,7 +331,7 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     var chat = gChats[data.from];
     if (!chat) {
-      alert("chat to close doesn't exist");
+      // The chat to close doesn't exist any more...
       return;
     }
     chat.pc.close();

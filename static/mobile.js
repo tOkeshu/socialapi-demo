@@ -39,14 +39,16 @@ function onLoad() {
 }
 
 function onContactClick(aEvent) {
-  callPerson(aEvent.target.innerHTML);
+  callPerson(aEvent.target.getAttribute("user"));
 }
 
 function callPerson(aPerson) {
   if (gChat)
     return;
 
-  $("#content").show();
+  $("#call").show();
+  $("#header").hide();
+  $("#contacts").hide();
 
   var pc = new window.mozRTCPeerConnection();
   pc.onaddstream = function(obj) {
@@ -119,9 +121,10 @@ function setupEventSource() {
     if (e.data in gContacts) {
       return;
     }
-    var button = $('<button class="userButton">' + e.data + '</button>');
-    var c = $("<li>");
-    $("#contacts").append(c.append(button));
+    var button = $('<button class="callButton" user="'+ e.data + '">Call</button>');
+    var c = $("<li>" + e.data + "</li>");
+    c.append(button);
+    $("#contactslist").append(c);
     button.click(onContactClick);
     gContacts[e.data] = c;
   }, false);

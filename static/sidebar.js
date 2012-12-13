@@ -25,6 +25,15 @@ function onContactClick(aEvent) {
 }
 
 function callPerson(aPerson) {
+  // Check first if the person is already calling us...
+  if (aPerson in gChats) {
+    // If a call is ringing, accept it.
+    var doc = gChats[aPerson].win.document;
+    if (doc.getElementById("callAnswer").style.display == "block")
+      doc.getElementById("accept").onclick();
+    return;
+  }
+
   openChat(aPerson, function(aWin) {
     var win = gChats[aPerson].win;
     var doc = win.document;

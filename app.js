@@ -241,6 +241,13 @@ app.post("/stopcall", function(req, res) {
     channelWrite(c.response, "stopcall", JSON.stringify(req.body));
     delete c.calling;
   });
+
+  // Send a stopcall to all the other user connections that received the offer.
+  findConnectionsForUser(req.session.user).forEach(function(c) {
+    if (c.sessionID != req.sessionID)
+      channelWrite(c.response, "stopcall", JSON.stringify({from: req.body.to}));
+  });
+
   res.send(200);
 });
 

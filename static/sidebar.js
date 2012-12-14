@@ -252,7 +252,7 @@ function setupExpandHandler(win) {
 }
 
 function setupEventSource() {
-  var source = new EventSource("events");
+  var source = new EventSource("events?source=sidebar");
   source.onerror = function(e) {
     reload();
   };
@@ -280,8 +280,17 @@ function setupEventSource() {
 
   source.addEventListener("offer", function(e) {
     var data = JSON.parse(e.data);
-    openChat(data.from, function(aWin) {
-      var win = gChats[data.from].win;
+    var from = data.from;
+
+    // Silently drop calls from people already calling us.
+    // The server won't cancel the ongoing call if there's a pending call.
+    if (from in gChats) {
+      stopCall(from);
+      return;
+    }
+
+    openChat(from, function(aWin) {
+      var win = gChats[from].win;
       var doc = win.document;
       doc.getElementById("callAnswer").style.display = "block";
       doc.getElementById("reject").onclick = function() {
@@ -304,8 +313,8 @@ function setupEventSource() {
             alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
           }
         };
-        setupDataChannel(false, pc, data.from);
-        gChats[data.from].pc = pc;
+        setupDataChannel(false, pc, from);
+        gChats[from].pc = pc;
         pc.setRemoteDescription(JSON.parse(data.request), function() {
           getAudioVideo(win, pc, function() {
             pc.createAnswer(function(answer) {
@@ -318,7 +327,7 @@ function setupEventSource() {
                 while (remotePort == localPort) // Avoid being extremely unlucky...
                   remotePort = randomPort();
                 $.ajax({type: 'POST', url: '/answer',
-                        data: {to: data.from, request: JSON.stringify(answer),
+                        data: {to: from, request: JSON.stringify(answer),
                                callerPort: remotePort, calleePort: localPort}});
                 pc.connectDataConnection(localPort, remotePort);
               }, function(err) {alert("failed to setLocalDescription, " + err);});

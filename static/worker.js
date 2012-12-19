@@ -101,7 +101,7 @@ var handlers = {
       }
     }
     if (!newUserData) {
-      // Logging out is handled by worker.reload above.
+      userData = {};
       return;
     }
     if (userData.userName != newUserData.userName) {

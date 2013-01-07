@@ -50,6 +50,7 @@ function onSignout() {
 
 function onPersonaLogin(assertion) {
   $("#signin").hide();
+  $("#guest").hide();
   remoteLogin({assertion: assertion});
 }
 

@@ -211,7 +211,7 @@ function endCall() {
   document.getElementById("reject").onclick = null;
 
   webrtcMedia.endCall(gChat.pc, null, window, gChat.audioOnly);
-  gChat = {};
+  gChat = null;
 
   $("#call").hide();
   $("#header").show();

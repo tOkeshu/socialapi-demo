@@ -1,10 +1,10 @@
 // This object currently assumes the following elements are defined in the web page for calls:
 // remoteVideo, remoteAudio, localVideo, localAudio
 var webrtcMedia = {
-  startCall: function webrtcMedia_startCall(aPerson, aAudioOnly) {
-    var pc = this._createBasicPc();
+  startCall: function webrtcMedia_startCall(aPerson, aWin, aAudioOnly) {
+    var pc = this._createBasicPc(aWin);
     setupDataChannel(true, pc, aPerson);
-    (aAudioOnly ? getAudioOnly : getAudioVideo)(window,
+    (aAudioOnly ? getAudioOnly : getAudioVideo)(aWin,
       pc,
       function() {
         pc.createOffer(function(offer) {
@@ -18,55 +18,66 @@ var webrtcMedia = {
     return pc;
   },
 
-  handleOffer: function webrtcMedia_handleOffer(aData) {
-    var pc = this._createBasicPc();
+  handleOffer: function webrtcMedia_handleOffer(aData, aWin, aAudioOnly) {
+    var pc = this._createBasicPc(aWin);
     setupDataChannel(false, pc, aData.from);
     pc.setRemoteDescription(JSON.parse(aData.request), function() {
-      getAudioVideo(window, pc, function() {
+      (aAudioOnly ? getAudioOnly : getAudioVideo)(aWin, pc, function() {
         pc.createAnswer(function(answer) {
           pc.setLocalDescription(answer, function() {
+            var randomPort = function() {
+              return Math.round(Math.random() * 60535) + 5000;
+            };
+            var localPort = randomPort();
+            var remotePort = randomPort();
+            while (remotePort == localPort) // Avoid being extremely unlucky...
+              remotePort = randomPort();
             $.ajax({type: 'POST', url: '/answer',
-                    data: {to: aData.from, request: JSON.stringify(answer)}});
-            pc.connectDataConnection(5001,5000);
+                    data: {to: aData.from, request: JSON.stringify(answer),
+                           callerPort: remotePort, calleePort: localPort}});
+            pc.connectDataConnection(localPort, remotePort);
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);});
       }, true);
-    }, function(err) {alert("failed to setRemoteDescription, " + err);});
+    }, function(err) {alert("failed to setRemoteDescription, " + err); });
+
     return pc;
   },
 
-  endCall: function webrtcMedia_stopCall(pc, aAudioOnly) {
+  endCall: function webrtcMedia_stopCall(aPc, aDc, aWin, aAudioOnly) {
     var mediaElements = ["remoteAudio", "localAudio"];
     if (!aAudioOnly)
       mediaElements = mediaElements.concat("remoteVideo", "localVideo");
 
     // Stop each media element
     mediaElements.forEach(function (aElemId) {
-      var element = document.getElementById(aElemId);
+      var element = aWin.document.getElementById(aElemId);
       element.pause();
       if (aElemId.indexOf("local") != -1) {
-        if (pc)
-          pc.removeStream(element.mozSrcObject);
+        if (aPc)
+          aPc.removeStream(element.mozSrcObject);
         if (element.mozSrcObject)
           element.mozSrcObject.stop();
       }
       element.mozSrcObject = null;
     });
 
-    if (pc)
-      pc.close();
+    if (aPc)
+      aPc.close();
+    if (aDc)
+      aDc.close();
   },
 
-  _createBasicPc: function webrtcMedia_createBasicPc() {
-    var pc = new window.mozRTCPeerConnection();
+  _createBasicPc: function webrtcMedia_createBasicPc(aWin) {
+    var pc = new aWin.mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var type = obj.type;
       if (type == "video") {
-        var video = document.getElementById("remoteVideo");
+        var video = aWin.document.getElementById("remoteVideo");
         video.mozSrcObject = obj.stream;
         video.play();
       } else if (type == "audio") {
-        var audio = document.getElementById("remoteAudio");
+        var audio = aWin.document.getElementById("remoteAudio");
         audio.mozSrcObject = obj.stream;
         audio.play();
       } else {

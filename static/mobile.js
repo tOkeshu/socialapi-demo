@@ -87,7 +87,7 @@ function callPerson(aPerson) {
   $("#header").hide();
   $("#contacts").hide();
 
-  gChat.pc = webrtcMedia.startCall(aPerson, gChat.audioOnly);
+  gChat.pc = webrtcMedia.startCall(aPerson, window, gChat.audioOnly);
 }
 
 var filename = "default.txt";
@@ -166,7 +166,7 @@ function setupEventSource() {
       $("#header").hide();
       $("#contacts").hide();
 
-      gChat.pc = webrtcMedia.handleOffer(data);
+      gChat.pc = webrtcMedia.handleOffer(data, window);
     };
   }, false);
 
@@ -210,7 +210,7 @@ function endCall() {
   document.getElementById("accept").onclick = null;
   document.getElementById("reject").onclick = null;
 
-  webrtcMedia.endCall(gChat.pc, gChat.audioOnly);
+  webrtcMedia.endCall(gChat.pc, null, window, gChat.audioOnly);
   gChat = {};
 
   $("#call").hide();

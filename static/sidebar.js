@@ -48,32 +48,8 @@ function callPerson(aPerson) {
     var win = gChats[aPerson].win;
     var doc = win.document;
     doc.getElementById("calling").style.display = "block";
-    var pc = new win.mozRTCPeerConnection();
-    pc.onaddstream = function(obj) {
-      doc.getElementById("calling").style.display = "none";
-      var type = obj.type;
-      if (type == "video") {
-        var video = doc.getElementById("remoteVideo");
-        video.mozSrcObject = obj.stream;
-        video.play();
-      } else if (type == "audio") {
-        var audio = doc.getElementById("remoteAudio");
-        audio.mozSrcObject = obj.stream;
-        audio.play();
-      } else {
-        alert("sender onaddstream of unknown type, obj = " + obj.toSource());
-      }
-    };
-    setupDataChannel(true, pc, aPerson);
-    gChats[aPerson].pc = pc;
-    getAudioVideo(aWin, pc, function() {
-      pc.createOffer(function(offer) {
-        pc.setLocalDescription(offer, function() {
-          $.ajax({type: 'POST', url: '/offer',
-                  data: {to: aPerson, request: JSON.stringify(offer)}});},
-          function(err) { alert("setLocalDescription failed: " + err); });
-      }, function(err) { alert("createOffer failed: " + err); });
-    });
+    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, false);
+    gChats[aPerson].audioOnly = false;
   });
 }
 
@@ -320,50 +296,16 @@ function setupEventSource() {
       offer.sdp = offer.sdp.split("m=").filter(function(s) {
         return !s.startsWith("video") || s.indexOf("a=recvonly") == -1;
       }).join("m=");
-      var audioOnly = offer.sdp.indexOf("m=video") == -1;
+      gChats[from].audioOnly = offer.sdp.indexOf("m=video") == -1;
+
       doc.getElementById("callAnswer").style.display = "block";
       doc.getElementById("reject").onclick = function() {
         win.close();
       };
       doc.getElementById("accept").onclick = function() {
         doc.getElementById("callAnswer").style.display = "none";
-        var pc = new win.mozRTCPeerConnection();
-        pc.onaddstream = function(obj) {
-          var type = obj.type;
-          if (type == "video") {
-            var video = doc.getElementById("remoteVideo");
-            video.mozSrcObject = obj.stream;
-            video.play();
-          } else if (type == "audio") {
-            var audio = doc.getElementById("remoteAudio");
-            audio.mozSrcObject = obj.stream;
-            audio.play();
-          } else {
-            alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
-          }
-        };
-        setupDataChannel(false, pc, from);
-        gChats[from].pc = pc;
-        pc.setRemoteDescription(offer, function() {
-          (audioOnly ? getAudioOnly : getAudioVideo)(win, pc, function() {
-            pc.createAnswer(function(answer) {
-              pc.setLocalDescription(answer, function() {
-                var randomPort = function() {
-                  return Math.round(Math.random() * 60535) + 5000;
-                };
-                var localPort = randomPort();
-                var remotePort = randomPort();
-                while (remotePort == localPort) // Avoid being extremely unlucky...
-                  remotePort = randomPort();
-                $.ajax({type: 'POST', url: '/answer',
-                        data: {to: from, request: JSON.stringify(answer),
-                               callerPort: remotePort, calleePort: localPort}});
-                pc.connectDataConnection(localPort, remotePort);
-              }, function(err) {alert("failed to setLocalDescription, " + err);});
-            }, function(err) {alert("failed to createAnswer, " + err);});
-          }, true);
-        }, function(err) {alert("failed to setRemoteDescription, " + err);});
-      }
+        gChats[from].pc = webrtcMedia.handleOffer(data, win, gChats[from].audioOnly);
+      };
     });
   }, false);
 
@@ -390,10 +332,7 @@ function setupEventSource() {
       // The chat to close doesn't exist any more...
       return;
     }
-    if (chat.pc)
-      chat.pc.close();
-    if (chat.dc)
-      chat.dc.close();
+    webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
     delete gChats[data.from];
     chat.win.close();
   });
@@ -461,10 +400,7 @@ function openChat(aTarget, aCallback) {
         return;
       stopCall(aTarget);
       var chat = gChats[aTarget];
-      if (chat.pc)
-        chat.pc.close();
-      if (chat.dc)
-        chat.dc.close();
+      webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
       delete gChats[aTarget];
     });
     if (aCallback) {

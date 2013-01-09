@@ -48,7 +48,8 @@ function callPerson(aPerson) {
     var win = gChats[aPerson].win;
     var doc = win.document;
     doc.getElementById("calling").style.display = "block";
-    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, false);
+    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, false,
+                                               onConnection, setupFileSharing);
     gChats[aPerson].audioOnly = false;
   });
 }
@@ -104,37 +105,24 @@ function signedOut() {
   reload();
 }
 
-var filename = "default.txt";
-function setupDataChannel(originator, pc, target) {
-  var win = gChats[target].win;
+function onConnection(aWin, aPc, aPerson, aOriginator) {
+  // Do we need to set up a data connection itself?
+  if (aOriginator)
+    setupFileSharing(aWin, aPc.createDataChannel("SocialAPI", {}), aPerson);
 
-  pc.ondatachannel = function(channel) {
-    setupFileSharing(win, channel, target);
+  // Now set up the chat interface
+  aWin.document.getElementById("chatForm").onsubmit = function() {
+    var localChat = aWin.document.getElementById("localChat");
+    var message = localChat.value;
+    gChats[aPerson].dc.send(message);
+    localChat.value = "";
+    // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
+    try {
+      insertChatMessage(aWin, "Me", message);
+    } catch(e) {}
+    return false;
   };
-
-  pc.onconnection = function() {
-    if (originator) {
-      // open a channel to the other side.
-      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}), target);
-    }
-
-    // sending chat.
-    win.document.getElementById("chatForm").onsubmit = function() {
-      var localChat = win.document.getElementById("localChat");
-      var message = localChat.value;
-      gChats[target].dc.send(message);
-      localChat.value = "";
-      // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
-      try {
-        insertChatMessage(win, "Me", message);
-      } catch(e) {}
-      return false;
-    };
-    win.document.getElementById("localChat").removeAttribute("disabled");
-  };
-
-  pc.onclosedconnection = function() {
-  };
+  aWin.document.getElementById("localChat").removeAttribute("disabled");
 }
 
 function insertChatMessage(win, from, message) {
@@ -142,6 +130,8 @@ function insertChatMessage(win, from, message) {
   box.innerHTML += "<span class=\"" + from + "\">" + from + "</span>: " + message + "<br/>";
   box.scrollTop = box.scrollTopMax;
 }
+
+var filename = "default.txt";
 
 function gotChat(win, evt) {
   if (evt.data instanceof Blob) {
@@ -304,7 +294,8 @@ function setupEventSource() {
       };
       doc.getElementById("accept").onclick = function() {
         doc.getElementById("callAnswer").style.display = "none";
-        gChats[from].pc = webrtcMedia.handleOffer(data, win, gChats[from].audioOnly);
+        gChats[from].pc = webrtcMedia.handleOffer(data, win, gChats[from].audioOnly,
+                                                  onConnection, setupFileSharing);
       };
     });
   }, false);
@@ -317,7 +308,8 @@ function setupEventSource() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
-      pc.connectDataConnection(data.callerPort, data.calleePort);
+      if (data.callerPort && data.calleePort)
+        pc.connectDataConnection(data.callerPort, data.calleePort);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 

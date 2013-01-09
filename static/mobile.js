@@ -91,36 +91,6 @@ function callPerson(aPerson) {
 }
 
 var filename = "default.txt";
-function setupDataChannel(originator, pc, target) {
-//  var win = gChats[target].win;
-
-  pc.ondatachannel = function(channel) {
-//    setupFileSharing(win, channel, target);
-  };
-
-  pc.onconnection = function() {
-/*    if (originator) {
-      // open a channel to the other side.
-      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}), target);
-    }
-
-    // sending chat.
-    win.document.getElementById("chatForm").onsubmit = function() {
-      var localChat = win.document.getElementById("localChat");
-      var message = localChat.value;
-      gChats[target].dc.send(message);
-      localChat.value = "";
-      // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
-      try {
-        insertChatMessage(win, "Me", message);
-      } catch(e) {}
-      return false;
-    };*/
-  };
-
-  pc.onclosedconnection = function() {
-  };
-}
 
 function setupEventSource() {
   var source = new EventSource("events?source=mobile");
@@ -155,7 +125,8 @@ function setupEventSource() {
       return;
 
     var data = JSON.parse(e.data);
-    gChat = {who: data.from};
+    var audioOnly = JSON.parse(data.request).sdp.indexOf("m=video") == -1;
+    gChat = {who: data.from, audioOnly: audioOnly};
 
     $("#callAnswer").show();
     document.getElementById("callerName").textContent = data.from;
@@ -166,7 +137,7 @@ function setupEventSource() {
       $("#header").hide();
       $("#contacts").hide();
 
-      gChat.pc = webrtcMedia.handleOffer(data, window);
+      gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly);
     };
   }, false);
 
@@ -174,10 +145,11 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     var pc = gChat.pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
+      // XXX Data connections don't currently work on mobile
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
-      pc.connectDataConnection(5000,5001);
+      // pc.connectDataConnection(5000,5001);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 

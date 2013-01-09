@@ -1,9 +1,10 @@
 // This object currently assumes the following elements are defined in the web page for calls:
 // remoteVideo, remoteAudio, localVideo, localAudio
 var webrtcMedia = {
-  startCall: function webrtcMedia_startCall(aPerson, aWin, aAudioOnly) {
-    var pc = this._createBasicPc(aWin);
-    setupDataChannel(true, pc, aPerson);
+  startCall: function webrtcMedia_startCall(aPerson, aWin, aAudioOnly, aConnectionCallback,
+                                            aDataConnectionCallback) {
+    var pc = this._createBasicPc(aWin, aPerson, true, aAudioOnly, aConnectionCallback,
+                                 aDataConnectionCallback);
     (aAudioOnly ? this._setupAudioOnly : this._setupAudioVideo)(aWin,
       pc,
       function() {
@@ -18,25 +19,32 @@ var webrtcMedia = {
     return pc;
   },
 
-  handleOffer: function webrtcMedia_handleOffer(aData, aWin, aAudioOnly) {
-    var pc = this._createBasicPc(aWin);
-    setupDataChannel(false, pc, aData.from);
+  handleOffer: function webrtcMedia_handleOffer(aData, aWin, aAudioOnly, aConnectionCallback,
+                                                aDataConnectionCallback) {
+    var pc = this._createBasicPc(aWin, aData.from, false, aAudioOnly, aConnectionCallback,
+                                 aDataConnectionCallback);
     pc.setRemoteDescription(JSON.parse(aData.request), function() {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :
                     webrtcMedia._setupAudioVideo)(aWin, pc, function() {
         pc.createAnswer(function(answer) {
           pc.setLocalDescription(answer, function() {
-            var randomPort = function() {
-              return Math.round(Math.random() * 60535) + 5000;
-            };
-            var localPort = randomPort();
-            var remotePort = randomPort();
-            while (remotePort == localPort) // Avoid being extremely unlucky...
-              remotePort = randomPort();
-            $.ajax({type: 'POST', url: '/answer',
-                    data: {to: aData.from, request: JSON.stringify(answer),
-                           callerPort: remotePort, calleePort: localPort}});
-            pc.connectDataConnection(localPort, remotePort);
+            if (aAudioOnly) {
+              $.ajax({type: 'POST', url: '/answer',
+                      data: {to: aData.from, request: JSON.stringify(answer)}});
+            }
+            else {
+              var randomPort = function() {
+                return Math.round(Math.random() * 60535) + 5000;
+              };
+              var localPort = randomPort();
+              var remotePort = randomPort();
+              while (remotePort == localPort) // Avoid being extremely unlucky...
+                remotePort = randomPort();
+              $.ajax({type: 'POST', url: '/answer',
+                      data: {to: aData.from, request: JSON.stringify(answer),
+                             callerPort: remotePort, calleePort: localPort}});
+              pc.connectDataConnection(localPort, remotePort);
+            }
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);});
       }, true);
@@ -69,8 +77,14 @@ var webrtcMedia = {
       aDc.close();
   },
 
-  _createBasicPc: function webrtcMedia_createBasicPc(aWin) {
-    var pc = new aWin.mozRTCPeerConnection();
+  _createBasicPc: function webrtcMedia_createBasicPc(aWin, aPerson, aOriginator, aAudioOnly,
+                                                     aConnectionCallback,
+                                                     aDataConnectionCallback) {
+    var constraints = {};
+    // XXX Temporary constraint as full data channel SDP work is unfinished.
+    if (aAudioOnly)
+      constraints["MozDontOfferDataChannel"] = true;
+    var pc = new aWin.mozRTCPeerConnection(constraints);
     pc.onaddstream = function(obj) {
       var type = obj.type;
       if (type == "video") {
@@ -84,6 +98,17 @@ var webrtcMedia = {
       } else {
         alert("sender onaddstream of unknown type, obj = " + obj.toSource());
       }
+    };
+    pc.ondatachannel = function(aChannel) {
+      if (aDataConnectionCallback)
+        aDataConnectionCallback(aWin, aChannel, aPerson);
+    };
+    pc.onconnection = function() {
+      if (aConnectionCallback) {
+        aConnectionCallback(aWin, pc, aPerson, aOriginator);
+      }
+    };
+    pc.onclosedconnection = function(obj) {
     };
     return pc;
   },

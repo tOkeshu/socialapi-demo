@@ -27,6 +27,11 @@ var webrtcMedia = {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :
                     webrtcMedia._setupAudioVideo)(aWin, pc, function() {
         pc.createAnswer(function(answer) {
+          if (aAudioOnly) {
+            answer.sdp = answer.sdp.split("m=")
+                               .filter(function(s) { return !s.startsWith("video"); })
+                               .join("m=");
+          }
           pc.setLocalDescription(answer, function() {
             if (aAudioOnly) {
               $.ajax({type: 'POST', url: '/answer',

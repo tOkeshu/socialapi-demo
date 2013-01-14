@@ -8,7 +8,7 @@ var webrtcChecks = {
       this.displaySuccess();
   },
 
-  hasWebRTC: function() {
+  hasWebRTC: function webrtc_hasWebRTC() {
     if (!navigator.mozGetUserMedia)
       return false;
     try {
@@ -19,13 +19,12 @@ var webrtcChecks = {
     return true;
   },
 
-  hasBrowserId: function() {
+  hasBrowserId: function webrtc_hasBrowserId() {
     return !!navigator.id;
   },
 
-  checkSidebarSupport: function () {
-    var support = this.hasWebRTC() && this.hasBrowserId();
-    if (!support)
+  checkSidebarSupport: function webrtc_checkSidebarSupport() {
+    if (!this.hasWebRTC() || !this.hasBrowserId())
       this.displaySidebarWarning();
   },
 

@@ -331,6 +331,7 @@ function setupEventSource() {
         video.mozSrcObject.stop();
       video.mozSrcObject = null;
     }
+    chat.win.document.getElementById("warning").style.display = "none";
     chat.win.document.getElementById("calling").style.display = "none";
     pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
@@ -354,8 +355,14 @@ function setupEventSource() {
       return;
     }
     webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
-    delete gChats[data.from];
-    chat.win.close();
+    var warning = chat.win.document.getElementById("warning");
+    warning.textContent = data.reason || "The call has been closed.";
+    warning.style.display = "block";
+    chat.win.document.getElementById("calling").style.display = "none";
+    setTimeout(function() {
+      chat.win.close();
+      delete gChats[data.from];
+    }, 10000);
   });
 
   window.addEventListener("beforeunload", function() {

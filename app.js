@@ -47,7 +47,7 @@ app.get("/events", function(req, res) {
   // Ping every 1 second.
   var pinger = setInterval(function() {
     if (res)
-      channelPing(res);
+      res.write(":ping\n\n");
   }, 20000);
 
   var key = req.connection.remoteAddress + ":" + req.connection.remotePort;
@@ -290,10 +290,6 @@ function channelWrite(aChannel, aEventType, aData) {
   }
 
   aChannel.write("event: " + aEventType + "\ndata: " + aData + "\n\n");
-}
-
-function channelPing(aChannel) {
-  aChannel.write(":ping\n\n");
 }
 
 function verifyAssertion(ast, aud, cb) {

@@ -125,7 +125,7 @@ function setupEventSource() {
     // We already are in a call. We reject automatically the incoming
     // one.
     if (gChat) {
-      closeCall(data.from, 'The callee is busy right now, the call has been rejected.');
+      closeCall(data.from, "The callee is busy right now, the call has been rejected.");
       return;
     }
 
@@ -135,7 +135,7 @@ function setupEventSource() {
     $("#callAnswer").show();
     document.getElementById("callerName").textContent = data.from;
     document.getElementById("reject").onclick = function() {
-      closeCall(gChat.who, 'The call has been rejected');
+      closeCall(gChat.who, "The call has been rejected");
       endCall();
     };
     document.getElementById("accept").onclick = function() {
@@ -178,11 +178,11 @@ function setupEventSource() {
   }, true);
 }
 
-function closeCall(aUser, reason) {
+function closeCall(aUser, aReason) {
   if (!gChat)
     return;
 
-  stopCall(aUser, reason);
+  stopCall(aUser, aReason);
 }
 
 function endCall() {

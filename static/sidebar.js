@@ -45,12 +45,11 @@ function callPerson(aPerson) {
   }
 
   openChat(aPerson, function(aWin) {
-    var win = gChats[aPerson].win;
-    var doc = win.document;
-    doc.getElementById("calling").style.display = "block";
-    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, false,
+    var chat = gChats[aPerson];
+    setStatus(chat, "calling", "Calling...");
+    chat.pc = webrtcMedia.startCall(aPerson, chat.win, false,
                                                onConnection, setupFileSharing);
-    gChats[aPerson].audioOnly = false;
+    chat.audioOnly = false;
   });
 }
 
@@ -331,8 +330,7 @@ function setupEventSource() {
         video.mozSrcObject.stop();
       video.mozSrcObject = null;
     }
-    chat.win.document.getElementById("warning").style.display = "none";
-    chat.win.document.getElementById("calling").style.display = "none";
+    setStatus(chat, "incall", "");
     pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
@@ -355,10 +353,7 @@ function setupEventSource() {
       return;
     }
     webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
-    var warning = chat.win.document.getElementById("warning");
-    warning.textContent = data.reason || "The call has been closed.";
-    warning.style.display = "block";
-    chat.win.document.getElementById("calling").style.display = "none";
+    setStatus(chat, "closed", data.reason);
     setTimeout(function() {
       chat.win.close();
       delete gChats[data.from];
@@ -369,6 +364,12 @@ function setupEventSource() {
     source.onerror = null;
     source.close();
   }, true);
+}
+
+function setStatus(chat, state, message) {
+  var status = chat.win.document.getElementById("status");
+  status.textContent = message || "The call has been closed.";
+  status.className = state;
 }
 
 function userIsConnected(userdata) {

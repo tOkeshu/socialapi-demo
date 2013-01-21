@@ -46,7 +46,7 @@ function callPerson(aPerson) {
 
   openChat(aPerson, function(aWin) {
     var chat = gChats[aPerson];
-    setStatus(chat, "calling", "Calling...");
+    setStatus(chat, "Calling...");
     chat.pc = webrtcMedia.startCall(aPerson, chat.win, false,
                                                onConnection, setupFileSharing);
     chat.audioOnly = false;
@@ -330,7 +330,7 @@ function setupEventSource() {
         video.mozSrcObject.stop();
       video.mozSrcObject = null;
     }
-    setStatus(chat, "incall", "");
+    setStatus(chat, "");
     pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
@@ -353,7 +353,7 @@ function setupEventSource() {
       return;
     }
     webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
-    setStatus(chat, "closed", data.reason);
+    setStatus(chat, data.reason || "The call has been closed.");
     setTimeout(function() {
       chat.win.close();
       delete gChats[data.from];
@@ -366,10 +366,13 @@ function setupEventSource() {
   }, true);
 }
 
-function setStatus(chat, state, message) {
+function setStatus(chat, message) {
   var status = chat.win.document.getElementById("status");
-  status.textContent = message || "The call has been closed.";
-  status.className = state;
+  if (message) {
+    status.textContent = message;
+    status.style.display = "block";
+  } else
+    status.style.display = "none";
 }
 
 function userIsConnected(userdata) {

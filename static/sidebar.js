@@ -48,7 +48,7 @@ function callPerson(aPerson) {
     var chat = gChats[aPerson];
     setStatus(chat, "Calling...");
     chat.pc = webrtcMedia.startCall(aPerson, chat.win, false,
-                                               onConnection, setupFileSharing);
+                                    onConnection, setupFileSharing);
     chat.audioOnly = false;
   });
 }

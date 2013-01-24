@@ -7,9 +7,9 @@ var webrtcMedia = {
                                  aDataConnectionCallback);
 
     // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
-    var constraints = { 'mandatory': {}};
+    var constraints;
     if (aAudioOnly)
-      constraints['mandatory']["MozDontOfferDataChannel"] = true;
+      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
 
     (aAudioOnly ? this._setupAudioOnly : this._setupAudioVideo)(aWin,
       pc,
@@ -38,9 +38,9 @@ var webrtcMedia = {
                                  aDataConnectionCallback);
 
     // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
-    var constraints = { 'mandatory': {}};
+    var constraints;
     if (aAudioOnly)
-      constraints['mandatory']["MozDontOfferDataChannel"] = true;
+      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
 
     pc.setRemoteDescription(JSON.parse(aData.request), function() {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :

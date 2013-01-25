@@ -31,10 +31,11 @@ function onLoad() {
 }
 
 function onContactClick(aEvent) {
-  callPerson(aEvent.target.innerHTML);
+  callPerson(aEvent.target.getAttribute("user"),
+             aEvent.target.getAttribute("call") == "audio");
 }
 
-function callPerson(aPerson) {
+function callPerson(aPerson, aAudioCall) {
   // Check first if the person is already calling us...
   if (aPerson in gChats) {
     // If a call is ringing, accept it.
@@ -47,9 +48,9 @@ function callPerson(aPerson) {
   openChat(aPerson, function(aWin) {
     var chat = gChats[aPerson];
     setStatus(chat, "Calling...");
-    chat.pc = webrtcMedia.startCall(aPerson, chat.win, false,
+    chat.pc = webrtcMedia.startCall(aPerson, chat.win, aAudioCall,
                                     onConnection, setupFileSharing);
-    chat.audioOnly = false;
+    chat.audioOnly = aAudioCall;
   });
 }
 
@@ -269,11 +270,19 @@ function setupEventSource() {
     if (e.data in gContacts) {
       return;
     }
-    var button = $('<button class="userButton">' + e.data + '</button>');
-    var c = $("<li>");
-    $("#contacts").append(c.append(button));
-    button.click(onContactClick);
-    gContacts[e.data] = c;
+    var contact = $('<li class="contact">');
+    // Add the picture
+    contact.append($('<div class="userName">' + e.data + '</div>'));
+    var userButtons = $('<div class="userButtons">');
+    var userButton = $('<button class="userButtonVideo" user="' + e.data + '" call="video"/>');
+    userButton.click(onContactClick);
+    userButtons.append(userButton);
+    userButton = $('<button class="userButtonAudio" user="' + e.data + '" call="audio"/>');
+    userButton.click(onContactClick);
+    userButtons.append(userButton);
+    contact.append(userButtons);
+    $("#contacts").append(contact);
+    gContacts[e.data] = contact;
   }, false);
 
   source.addEventListener("userleft", function(e) {
@@ -323,11 +332,11 @@ function setupEventSource() {
     var pc = chat.pc;
     if (!chat.audioOnly && answer.sdp.indexOf("m=video") == -1) {
       chat.audioOnly = true;
+      var audio = chat.win.document.getElementById("localAudio");
       var video = chat.win.document.getElementById("localVideo");
-      pc.removeStream(video.mozSrcObject);
-      video.pause();
-      if (video.mozSrcObject)
-        video.mozSrcObject.stop();
+      // Using the audio+video stream as audio only has the
+      // unfortunate effect of keeping the webcam active...
+      audio.mozSrcObject = video.mozSrcObject;
       video.mozSrcObject = null;
     }
     setStatus(chat, "");
@@ -378,8 +387,7 @@ function setStatus(chat, message) {
 function userIsConnected(userdata) {
   $("#userid").text(userdata.userName);
   $("#usericon").attr("src", userdata.portrait);
-  $("#useridbox").show();
-  $("#usericonbox").show();
+  $("#signedin").show();
   $("#content").show();
   setupEventSource();
 }
@@ -388,8 +396,7 @@ function userIsDisconnected() {
   $("#content").hide();
   $("#userid").text("");
   $("#usericon").attr("src", "");
-  $("#useridbox").hide();
-  $("#usericonbox").hide();
+  $("#signedin").hide();
 }
 
 var messageHandlers = {

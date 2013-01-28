@@ -147,11 +147,11 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     var pc = gChat.pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
-      // XXX Data connections don't currently work on mobile
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
-      // pc.connectDataConnection(5000,5001);
+      if (data.callerPort && data.calleePort)
+        pc.connectDataConnection(data.callerPort, data.calleePort);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 

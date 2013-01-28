@@ -55,18 +55,6 @@ var webrtcMedia = {
                                .join("m=");
           }
           pc.setLocalDescription(answer, function() {
-            if (aAudioOnly) {
-              $.ajax({
-                type: 'POST',
-                url: '/answer',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                  to: aData.from,
-                  request: JSON.stringify(answer)
-                })
-              });
-            }
-            else {
               var randomPort = function() {
                 return Math.round(Math.random() * 60535) + 5000;
               };
@@ -86,7 +74,6 @@ var webrtcMedia = {
                 })
               });
               pc.connectDataConnection(localPort, remotePort);
-            }
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);}, constraints);
       }, true);

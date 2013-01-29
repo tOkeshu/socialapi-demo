@@ -55,25 +55,25 @@ var webrtcMedia = {
                                .join("m=");
           }
           pc.setLocalDescription(answer, function() {
-              var randomPort = function() {
-                return Math.round(Math.random() * 60535) + 5000;
-              };
-              var localPort = randomPort();
-              var remotePort = randomPort();
-              while (remotePort == localPort) // Avoid being extremely unlucky...
-                remotePort = randomPort();
-              $.ajax({
-                type: 'POST',
-                url: '/answer',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                  to: aData.from,
-                  request: JSON.stringify(answer),
-                  callerPort: remotePort,
-                  calleePort: localPort
-                })
-              });
-              pc.connectDataConnection(localPort, remotePort);
+            var randomPort = function() {
+              return Math.round(Math.random() * 60535) + 5000;
+            };
+            var localPort = randomPort();
+            var remotePort = randomPort();
+            while (remotePort == localPort) // Avoid being extremely unlucky...
+              remotePort = randomPort();
+            $.ajax({
+              type: 'POST',
+              url: '/answer',
+              contentType: 'application/json',
+              data: JSON.stringify({
+                to: aData.from,
+                request: JSON.stringify(answer),
+                callerPort: remotePort,
+                calleePort: localPort
+              })
+            });
+            pc.connectDataConnection(localPort, remotePort);
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);}, constraints);
       }, true);

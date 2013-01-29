@@ -87,7 +87,7 @@ function callPerson(aPerson) {
   $("#header").hide();
   $("#contacts").hide();
 
-  gChat.pc = webrtcMedia.startCall(aPerson, window, gChat.audioOnly);
+  gChat.pc = webrtcMedia.startCall(aPerson, window, gChat.audioOnly, onConnection, setupChat);
 }
 
 var filename = "default.txt";
@@ -139,7 +139,7 @@ function setupEventSource() {
 
       if (!document.getElementById("shareCamera").checked)
         gChat.audioOnly = audioOnly = true;
-      gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly);
+      gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly, onConnection, setupChat);
     };
   }, false);
 
@@ -171,6 +171,40 @@ function setupEventSource() {
   }, true);
 }
 
+function onConnection(aWin, aPc, aPerson, aOriginator) {
+  if (aOriginator)
+    setupChat(aWin, aPc.createDataChannel("SocialAPI", {}));
+}
+
+function setupChat(aWin, aChannel) {
+  aChannel.binaryType = "blob";
+  aChannel.onmessage = function(evt) {
+    insertChatMessage("Them", evt.data);
+  }
+
+  document.getElementById("chatForm").onsubmit = function() {
+    var localChat = document.getElementById("localChat");
+    var message = localChat.value;
+    aChannel.send(message);
+    localChat.value = "";
+    insertChatMessage("Me", message);
+    return false;
+  };
+  document.getElementById("localChat").removeAttribute("disabled");
+}
+
+function insertChatMessage(aFrom, aMessage) {
+  var box = document.getElementById("chat");
+  box.innerHTML += "<span class=\"" + aFrom + "\">" + aFrom + "</span>: " + aMessage + "<br/>";
+  box.scrollTop = box.scrollTopMax;
+}
+
+function cleanChat() {
+  var box = document.getElementById("chat");
+  box.innerHTML = '';
+  document.getElementById("localChat").setAttribute("disabled", "disabled");
+}
+
 function closeCall() {
   if (!gChat)
     return;
@@ -191,4 +225,6 @@ function endCall() {
   $("#call").hide();
   $("#header").show();
   $("#contacts").show();
+
+  cleanChat();
 }
